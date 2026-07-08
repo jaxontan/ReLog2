@@ -1,0 +1,31 @@
+# --- Flutter / Dart ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+flutter_*.png
+*.iml
+*.log
+.idea/
+.vscode/
+android/.gradle/
+android/local.properties
+android/**/gradle-wrapper.jar
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Pods/
+ios/Podfile.lock
+web/icons/Icon-*.png
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+
+# --- Hermes local state (NOT project rules; see .hermes.md at root) ---
+.hermes/
+
+# --- Secrets / local env ---
+.env
+*.local

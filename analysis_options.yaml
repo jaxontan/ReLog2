@@ -1,0 +1,32 @@
+# Strict lint baseline for MemoriesApp.
+# Enforced via `flutter analyze` in CI (see PLAN.md §5).
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Explicitness / safety
+    - always_declare_return_types
+    - avoid_print
+    - prefer_const_constructors
+    - prefer_const_constructors_in_immutables
+    - prefer_const_literals_to_create_immutables
+    - prefer_final_locals
+    - prefer_final_in_for_each
+    - unnecessary_const
+    - unnecessary_null_checks
+    # Naming (matches PLAN.md §1.2)
+    - camel_case_extensions
+    - file_names
+    - non_constant_identifier_names
+    - constant_identifier_names
+    - library_names
+
+analyzer:
+  errors:
+    # Treat these as hard failures so they can't slip into a PR.
+    avoid_print: error
+    prefer_const_constructors: warning
+  exclude:
+    - "**/generated/**"
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
