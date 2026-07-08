@@ -1,4 +1,4 @@
-# MemoriesApp
+# ReLog2
 
 A Flutter app (pre-development scaffold). Product core **TBD** — see [PLAN.md](./PLAN.md).
 

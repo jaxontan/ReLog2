@@ -1,4 +1,4 @@
-# Strict lint baseline for MemoriesApp.
+# Strict lint baseline for ReLog2.
 # Enforced via `flutter analyze` in CI (see PLAN.md §5).
 include: package:flutter_lints/flutter.yaml
 

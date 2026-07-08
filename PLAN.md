@@ -1,4 +1,4 @@
-# MemoriesApp — Build Plan
+# ReLog2 — Build Plan
 
 > Status: **Foundations locked. Product core = TBD (jaxon will define).** Do not run `flutter create` or write feature code until the core is confirmed and the Feature Map (§3) is filled in.
 
