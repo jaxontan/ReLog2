@@ -1,39 +1,38 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/failures.dart';
 
-// ponytail: email/password only. Google Sign-In deferred (google_sign_in 7.x API changed).
+// ponytail: Supabase Auth — email/password + onAuthStateChange. Google sign-in via Supabase OAuth when needed.
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoTrueClient _auth = Supabase.instance.client.auth;
 
   User? get currentUser => _auth.currentUser;
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  Stream<AuthState> get authStateChanges => _auth.onAuthStateChange;
 
   Future<(User?, Failure?)> signInWithEmail(String email, String password) async {
     try {
-      final cred = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      return (cred.user, null);
-    } on FirebaseAuthException catch (e) {
-      return (null, AuthFailure(_mapError(e.code)));
+      final res = await _auth.signInWithPassword(email: email, password: password);
+      return (res.user, null);
+    } on AuthException catch (e) {
+      return (null, AuthFailure(_mapError(e.message)));
     }
   }
 
   Future<(User?, Failure?)> registerWithEmail(String email, String password) async {
     try {
-      final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      return (cred.user, null);
-    } on FirebaseAuthException catch (e) {
-      return (null, AuthFailure(_mapError(e.code)));
+      final res = await _auth.signUp(email: email, password: password);
+      return (res.user, null);
+    } on AuthException catch (e) {
+      return (null, AuthFailure(_mapError(e.message)));
     }
   }
 
   Future<void> signOut() async => _auth.signOut();
 
-  String _mapError(String code) => switch (code) {
-        'user-not-found' => 'No account found with this email.',
-        'wrong-password' => 'Incorrect password.',
-        'email-already-in-use' => 'This email is already registered.',
-        'weak-password' => 'Password is too weak.',
-        'invalid-email' => 'Please enter a valid email.',
+  // ponytail: Supabase error messages are English. Map known patterns, fall through on unknown.
+  String _mapError(String msg) => switch (msg) {
+        String s when s.contains('Invalid login credentials') => 'Incorrect email or password.',
+        String s when s.contains('already registered') => 'This email is already registered.',
+        String s when s.contains('password') && s.contains('weak') => 'Password is too weak.',
         _ => 'Something went wrong. Please try again.',
       };
 }

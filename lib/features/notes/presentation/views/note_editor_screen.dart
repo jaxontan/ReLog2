@@ -114,7 +114,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (body.isEmpty) return;
     setState(() => _saving = true);
     final repo = ref.read(memoryRepositoryProvider);
-    final userId = ref.read(authServiceProvider).currentUser?.uid;
+    final userId = ref.read(authServiceProvider).currentUser?.id;
     if (userId == null) return;
     final (_, error) = await repo.saveMemory(
       albumId: widget.albumId,

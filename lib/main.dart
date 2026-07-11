@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // ponytail: Firebase init fails gracefully if not configured yet
+  // ponytail: swap SUPABASE_URL + SUPABASE_ANON_KEY for your project. Supabase all-in (auth + data + storage).
   try {
-    await Firebase.initializeApp();
+    await Supabase.initialize(
+      url: 'YOUR_SUPABASE_URL',
+      publishableKey: 'YOUR_SUPABASE_ANON_KEY',
+    );
   } catch (_) {
-    debugPrint('Firebase not configured — auth + storage will be unavailable');
+    debugPrint('Supabase not configured');
   }
   runApp(const ProviderScope(child: ReLog2App()));
 }

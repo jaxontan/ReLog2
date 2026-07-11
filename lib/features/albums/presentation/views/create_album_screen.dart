@@ -64,7 +64,7 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
     if (title.isEmpty) return;
     setState(() => _creating = true);
     final repo = ref.read(albumRepositoryProvider);
-    final userId = ref.read(authServiceProvider).currentUser?.uid;
+    final userId = ref.read(authServiceProvider).currentUser?.id;
     if (userId == null) return;
     final (albumId, error) = await repo.createAlbum(title, userId);
     if (mounted) {

@@ -1,32 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/failures.dart';
 import '../models/album.dart';
 
 class AlbumRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  CollectionReference get _albums => _firestore.collection('albums');
+  final SupabaseClient _client = Supabase.instance.client;
 
   Future<(String?, Failure?)> createAlbum(String title, String userId) async {
     try {
       final code = Album.generateInviteCode();
-      final doc = await _albums.add({
+      final res = await _client.from('albums').insert({
         'title': title,
-        'creatorId': userId,
-        'inviteCode': code,
+        'creator_id': userId,
+        'invite_code': code,
         'status': 'active',
-        'photoCount': 0,
-        'membersCount': 1,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      // Creator is member #1
-      await _firestore.collection('members').add({
-        'albumId': doc.id,
-        'userId': userId,
+        'photo_count': 0,
+        'members_count': 1,
+      }).select().single();
+      await _client.from('members').insert({
+        'album_id': res['id'],
+        'user_id': userId,
         'role': 'creator',
-        'joinedAt': FieldValue.serverTimestamp(),
       });
-      return (doc.id, null);
+      return (res['id'] as String, null);
     } catch (e) {
       return (null, AlbumFailure(e.toString()));
     }
@@ -34,45 +30,36 @@ class AlbumRepository {
 
   Future<(Album?, Failure?)> joinAlbum(String inviteCode, String userId) async {
     try {
-      final query = await _albums.where('inviteCode', isEqualTo: inviteCode).limit(1).get();
-      if (query.docs.isEmpty) return (null, const AlbumFailure('Invalid invite code'));
-      final doc = query.docs.first;
-      // ponytail: atomic increment. Firestore handles race.
-      await _firestore.collection('members').add({
-        'albumId': doc.id,
-        'userId': userId,
+      final data = await _client.from('albums').select().eq('invite_code', inviteCode).maybeSingle();
+      if (data == null) return (null, const AlbumFailure('Invalid invite code'));
+      final albumId = data['id'] as String;
+      await _client.from('members').insert({
+        'album_id': albumId,
+        'user_id': userId,
         'role': 'member',
-        'joinedAt': FieldValue.serverTimestamp(),
       });
-      await doc.reference.update({'membersCount': FieldValue.increment(1)});
-      return (Album.fromMap(doc.id, doc.data() as Map<String, dynamic>), null);
+      // ponytail: read-modify-write for counter. Add .rpc increment when race matters.
+      await _client.from('albums').update({
+        'members_count': (data['members_count'] as int) + 1,
+      }).eq('id', albumId);
+      return (_mapAlbum(data), null);
     } catch (e) {
       return (null, AlbumFailure(e.toString()));
     }
   }
 
-  Stream<List<Album>> userAlbums(String userId) {
-    return _firestore
-        .collection('members')
-        .where('userId', isEqualTo: userId)
-        .snapshots()
-        .asyncMap((snap) async {
-      if (snap.docs.isEmpty) return [];
-      final albumIds = snap.docs.map((d) => ((d.data() as Map<String, dynamic>)['albumId'] as String)).toList();
-      // ponytail: Firestore 'in' query limited to 30. Paginate if > 30 albums.
-      if (albumIds.isEmpty) return [];
-      final albumSnap = await _albums.where(FieldPath.documentId, whereIn: albumIds).get();
-      return albumSnap.docs
-          .map((d) => Album.fromMap(d.id, d.data() as Map<String, dynamic>))
-          .toList();
-    });
+  Future<List<Album>> userAlbums(String userId) async {
+    // ponytail: join through foreign key members.album_id -> albums.id.
+    // Supabase PostgREST embeds: select('albums(*)') on members table.
+    final data = await _client.from('members').select('albums(*)').eq('user_id', userId);
+    return data.map((row) => _mapAlbum(row['albums'] as Map<String, dynamic>)).toList();
   }
 
   Future<(Album?, Failure?)> getAlbum(String albumId) async {
     try {
-      final doc = await _albums.doc(albumId).get();
-      if (!doc.exists) return (null, const AlbumFailure('Album not found'));
-      return (Album.fromMap(doc.id, doc.data() as Map<String, dynamic>), null);
+      final data = await _client.from('albums').select().eq('id', albumId).maybeSingle();
+      if (data == null) return (null, const AlbumFailure('Album not found'));
+      return (_mapAlbum(data), null);
     } catch (e) {
       return (null, AlbumFailure(e.toString()));
     }
@@ -80,18 +67,27 @@ class AlbumRepository {
 
   Future<Failure?> endTrip(String albumId, String userId) async {
     try {
-      final doc = await _albums.doc(albumId).get();
-      final data = doc.data() as Map<String, dynamic>?;
-      if (data == null || data['creatorId'] != userId) {
+      final data = await _client.from('albums').select().eq('id', albumId).maybeSingle();
+      if (data == null || (data['creator_id'] as String) != userId) {
         return const AlbumFailure('Only the creator can end the trip');
       }
-      await doc.reference.update({
-        'status': 'ended',
-        'endedAt': FieldValue.serverTimestamp(),
-      });
+      await _client.from('albums').update({'status': 'ended'}).eq('id', albumId);
       return null;
     } catch (e) {
       return AlbumFailure(e.toString());
     }
   }
+
+  // ponytail: SQL snake_case columns → Dart camelCase model.
+  Album _mapAlbum(Map<String, dynamic> row) => Album(
+        id: row['id'] as String,
+        title: row['title'] as String,
+        creatorId: row['creator_id'] as String,
+        inviteCode: row['invite_code'] as String,
+        status: row['status'] as String,
+        photoCount: row['photo_count'] as int? ?? 0,
+        membersCount: row['members_count'] as int? ?? 1,
+        createdAt: DateTime.tryParse(row['created_at'] as String? ?? '') ?? DateTime.now(),
+        endedAt: row['ended_at'] != null ? DateTime.tryParse(row['ended_at'] as String) : null,
+      );
 }

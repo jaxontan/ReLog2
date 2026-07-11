@@ -67,7 +67,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   Future<void> _saveVoice(String? filePath) async {
     if (filePath == null) return;
     final repo = ref.read(memoryRepositoryProvider);
-    final userId = ref.read(authServiceProvider).currentUser?.uid;
+    final userId = ref.read(authServiceProvider).currentUser?.id;
     if (userId == null) return;
     final (_, error) = await repo.saveMemory(
       albumId: widget.albumId,

@@ -5,8 +5,9 @@ import 'package:latlong2/latlong.dart';
 import '../../../memories/data/repositories/memory_repository.dart';
 import '../../../memories/data/models/memory.dart';
 
-final albumMapMarkersProvider = StreamProvider.autoDispose.family<List<Memory>, String>(
-  (ref, albumId) => ref.read(memoryRepositoryProvider).albumMapMarkers(albumId),
+// ponytail: FutureProvider replaces Firestore StreamProvider. Refresh on navigate.
+final albumMapMarkersProvider = FutureProvider.autoDispose.family<List<Memory>, String>(
+  (ref, albumId) async => ref.read(memoryRepositoryProvider).albumMapMarkers(albumId),
 );
 
 class MapScreen extends ConsumerWidget {
@@ -25,32 +26,24 @@ class MapScreen extends ConsumerWidget {
         data: (memories) {
           final coords = memories.map((m) => LatLng(m.lat!, m.lng!)).toList();
           final center = coords.isEmpty
-              ? const LatLng(1.3521, 103.8198) // Singapore default
+              ? const LatLng(1.3521, 103.8198)
               : LatLng(
                   coords.map((c) => c.latitude).reduce((a, b) => a + b) / coords.length,
                   coords.map((c) => c.longitude).reduce((a, b) => a + b) / coords.length,
                 );
-
           return FlutterMap(
             options: MapOptions(initialCenter: center, initialZoom: 13),
             children: [
-              TileLayer( // ponytail: free OSM tiles, no API key
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              ),
+              TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
               MarkerLayer(
                 markers: memories.map((m) => Marker(
                   point: LatLng(m.lat!, m.lng!),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        m.isNote ? Icons.edit_location : Icons.location_on,
-                        color: m.isNote ? Colors.deepPurple : Colors.red,
-                        size: 30,
-                      ),
-                      if (m.type == 'photo') const Icon(Icons.camera_alt, size: 14, color: Colors.black54),
-                    ],
-                  ),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(m.isNote ? Icons.edit_location : Icons.location_on,
+                        color: m.isNote ? Colors.deepPurple : Colors.red, size: 30),
+                    if (m.type == 'photo')
+                      const Icon(Icons.camera_alt, size: 14, color: Colors.black54),
+                  ]),
                 )).toList(),
               ),
             ],

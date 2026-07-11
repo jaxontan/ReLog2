@@ -67,7 +67,7 @@ class _JoinAlbumScreenState extends ConsumerState<JoinAlbumScreen> {
     final repo = ref.read(albumRepositoryProvider);
     // ponytail: direct repo call, joinAlbum needs a user ID. Grab from auth.
     final auth = ref.read(authServiceProvider);
-    final userId = auth.currentUser?.uid;
+    final userId = auth.currentUser?.id;
     if (userId == null) return;
     final (album, error) = await repo.joinAlbum(code, userId);
     if (mounted) {

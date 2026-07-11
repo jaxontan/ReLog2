@@ -1,14 +1,13 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/services/auth_service.dart';
 
 final authServiceProvider = Provider<AuthService>((_) => AuthService());
 
 final authStateProvider = StreamProvider<User?>((ref) {
-  return ref.watch(authServiceProvider).authStateChanges;
+  return ref.watch(authServiceProvider).authStateChanges.map((s) => s.session?.user);
 });
 
-// ponytail: one-shot actions. Screens call these directly.
 final loginAction = Provider.autoDispose<Future<String?> Function(String, String)>((ref) {
   return (email, pass) async {
     final (_, error) = await ref.read(authServiceProvider).signInWithEmail(email, pass);

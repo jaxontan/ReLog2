@@ -11,7 +11,7 @@ class AlbumDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final albumAsync = ref.watch(albumDetailProvider(albumId));
-    final userId = ref.watch(authServiceProvider).currentUser?.uid;
+    final userId = ref.watch(authServiceProvider).currentUser?.id;
 
     return Scaffold(
       appBar: AppBar(
