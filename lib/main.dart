@@ -9,8 +9,8 @@ void main() async {
   // ponytail: swap SUPABASE_URL + SUPABASE_ANON_KEY for your project. Supabase all-in (auth + data + storage).
   try {
     await Supabase.initialize(
-      url: 'YOUR_SUPABASE_URL',
-      publishableKey: 'YOUR_SUPABASE_ANON_KEY',
+      url: 'https://pzciufzihblwdsotttao.supabase.co',
+      publishableKey: 'sb_publishable_Ar4lbkU0Eg0vzT4j73FOFw_Qo8NM51U',
     );
   } catch (_) {
     debugPrint('Supabase not configured');
