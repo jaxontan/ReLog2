@@ -19,27 +19,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      body: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(
-        mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.map, size: 64, color: Colors.amber),
-        const SizedBox(height: 16),
-        Text('ReLog2', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 8),
-        Text('Memories as map markers', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
-        const SizedBox(height: 32),
-        TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)), keyboardType: TextInputType.emailAddress),
-        const SizedBox(height: 12),
-        TextField(controller: _pass, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock)), obscureText: true),
-        if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
-        const SizedBox(height: 24),
-        SizedBox(width: double.infinity, child: FilledButton(
-          onPressed: _loading ? null : _login,
-          child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Sign In'),
-        )),
-        const SizedBox(height: 16),
-        TextButton(onPressed: () => context.go('/register'), child: const Text("Don't have an account? Register")),
-      ]))),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [scheme.primary, scheme.primaryContainer],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const SizedBox(height: 48),
+              Container(
+                width: 80, height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.explore, size: 40, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              Text('ReLog2', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text('Memories as map markers', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
+              const SizedBox(height: 40),
+              Card(
+                color: scheme.surface,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(padding: const EdgeInsets.all(20), child: Column(children: [
+                  TextField(controller: _email, decoration: InputDecoration(labelText: 'Email', prefixIcon: const Icon(Icons.email), filled: true, fillColor: scheme.surfaceContainerHighest, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none))),
+                  const SizedBox(height: 12),
+                  TextField(controller: _pass, decoration: InputDecoration(labelText: 'Password', prefixIcon: const Icon(Icons.lock), filled: true, fillColor: scheme.surfaceContainerHighest, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)), obscureText: true),
+                  if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: TextStyle(color: scheme.error, fontSize: 13))),
+                  const SizedBox(height: 20),
+                  SizedBox(width: double.infinity, child: FilledButton(
+                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    onPressed: _loading ? null : _login,
+                    child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Sign In', style: TextStyle(fontSize: 16)),
+                  )),
+                ])),
+              ),
+              const SizedBox(height: 16),
+              TextButton(onPressed: () => context.go('/register'), child: Text("Don't have an account? Register", style: TextStyle(color: Colors.white.withValues(alpha: 0.9)))),
+              const SizedBox(height: 48),
+            ]),
+          )),
+        ),
+      ),
     );
   }
 
