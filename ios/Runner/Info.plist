@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ReLog2 tags your memories with a location on the map.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>ReLog2 uses the camera to capture photo and video memories.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ReLog2 uses the microphone for voice memories.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -2,8 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:camera/camera.dart';
+import 'package:record/record.dart';
 import '../../data/repositories/memory_repository.dart';
 import '../../../auth/presentation/view_models/auth_view_model.dart';
+import 'package:geolocator/geolocator.dart';
 
 class CaptureScreen extends ConsumerStatefulWidget {
   final String albumId;
@@ -13,135 +16,163 @@ class CaptureScreen extends ConsumerStatefulWidget {
   ConsumerState<CaptureScreen> createState() => _CaptureScreenState();
 }
 
-class _CaptureScreenState extends ConsumerState<CaptureScreen> {
+class _CaptureScreenState extends ConsumerState<CaptureScreen> with WidgetsBindingObserver {
   int _tab = 0; // 0=photo, 1=video, 2=voice
+  CameraController? _cam;
+  List<CameraDescription> _cameras = [];
+  bool _camReady = false, _recording = false, _saving = false;
+  final _recorder = AudioRecorder();
+  String? _voicePath;
+
+  @override
+  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); _initCam(); }
+
+  @override
+  void dispose() { WidgetsBinding.instance.removeObserver(this); _cam?.dispose(); _recorder.dispose(); super.dispose(); }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_cam == null || !_cam!.value.isInitialized) return;
+    if (state == AppLifecycleState.inactive) _cam!.dispose();
+    else if (state == AppLifecycleState.resumed) _initCam();
+  }
+
+  Future<void> _initCam() async {
+    try {
+      _cameras = await availableCameras();
+      if (_cameras.isEmpty) { setState(() => _camReady = false); return; }
+      final back = _cameras.firstWhere((c) => c.lensDirection == CameraLensDirection.back, orElse: () => _cameras.first);
+      _cam = CameraController(back, ResolutionPreset.high, enableAudio: true);
+      await _cam!.initialize();
+      if (mounted) setState(() => _camReady = true);
+    } catch (_) { if (mounted) setState(() => _camReady = false); }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Capture Memory')),
-      body: Column(
-        children: [
-          // Tab bar: photo / video / voice
-          Row(
-            children: [
-              _tabButton(0, Icons.camera_alt, 'Photo'),
-              _tabButton(1, Icons.videocam, 'Video'),
-              _tabButton(2, Icons.mic, 'Voice'),
-            ],
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: Center(
-              child: switch (_tab) {
-                0 => _CapturePlaceholder(icon: Icons.camera_alt, label: 'Camera will open here'),
-                1 => _CapturePlaceholder(icon: Icons.videocam, label: 'Video recorder will open here'),
-                _ => _VoiceCaptureWidget(onSaved: _saveVoice),
-              },
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Capture'), actions: [
+        if (_saving) const Padding(padding: EdgeInsets.all(16), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+      ]),
+      body: Column(children: [
+        Row(children: [
+          _tabBtn(0, Icons.camera_alt, 'Photo'),
+          _tabBtn(1, Icons.videocam, 'Video'),
+          _tabBtn(2, Icons.mic, 'Voice'),
+        ]),
+        const Divider(height: 1),
+        Expanded(child: _buildTab()),
+      ]),
     );
   }
 
-  Widget _tabButton(int idx, IconData icon, String label) {
-    final selected = _tab == idx;
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => _tab = idx),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: selected ? Theme.of(context).colorScheme.primary : Colors.transparent, width: 2)),
+  Widget _tabBtn(int i, IconData icon, String label) {
+    final sel = _tab == i;
+    return Expanded(child: InkWell(
+      onTap: () => setState(() => _tab = i),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: sel ? Theme.of(context).colorScheme.primary : Colors.transparent, width: 2))),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, color: sel ? Theme.of(context).colorScheme.primary : Colors.grey),
+          Text(label, style: TextStyle(fontSize: 12, color: sel ? Theme.of(context).colorScheme.primary : Colors.grey)),
+        ]),
+      ),
+    ));
+  }
+
+  Widget _buildTab() {
+    if (_tab == 2) return _voiceTab();
+    if (!_camReady || _cam == null) return const Center(child: Text('Camera unavailable', style: TextStyle(fontSize: 16, color: Colors.grey)));
+    return Stack(fit: StackFit.expand, children: [
+      CameraPreview(_cam!),
+      Positioned(bottom: 40, left: 0, right: 0, child: Center(
+        child: GestureDetector(
+          onTap: _tab == 0 ? _takePhoto : (_recording ? _stopVideo : _startVideo),
+          child: Container(
+            width: 72, height: 72,
+            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 4),
+              color: _recording ? Colors.red : Colors.white.withValues(alpha: 0.3)),
+            child: _tab == 1 && !_recording ? const Icon(Icons.fiber_manual_record, color: Colors.red, size: 32) : null,
           ),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(icon, color: selected ? Theme.of(context).colorScheme.primary : Colors.grey),
-            Text(label, style: TextStyle(fontSize: 12, color: selected ? Theme.of(context).colorScheme.primary : Colors.grey)),
-          ]),
         ),
-      ),
-    );
+      )),
+    ]);
   }
 
-  Future<void> _saveVoice(String? filePath) async {
-    if (filePath == null) return;
+  Future<void> _takePhoto() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      final file = await _cam!.takePicture();
+      await _saveMedia(File(file.path), 'photo');
+    } catch (_) { if (mounted) setState(() => _saving = false); }
+  }
+
+  Future<void> _startVideo() async {
+    setState(() { _recording = true; _saving = false; });
+    await _cam!.startVideoRecording();
+  }
+
+  Future<void> _stopVideo() async {
+    try {
+      final file = await _cam!.stopVideoRecording();
+      setState(() { _recording = false; _saving = true; });
+      await _saveMedia(File(file.path), 'video');
+    } catch (_) { if (mounted) setState(() => _recording = false); }
+  }
+
+  Widget _voiceTab() {
+    final recording = _recording;
+    return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+      GestureDetector(
+        onTap: recording ? _stopVoice : _startVoice,
+        child: Container(width: 80, height: 80,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: recording ? Colors.red : Theme.of(context).colorScheme.primary),
+          child: Icon(recording ? Icons.stop : Icons.mic, color: Colors.white, size: 36)),
+      ),
+      const SizedBox(height: 12),
+      Text(recording ? 'Recording...' : 'Tap to record', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+    ]));
+  }
+
+  Future<void> _startVoice() async {
+    if (await _recorder.hasPermission()) {
+      setState(() => _recording = true);
+      final path = '${Directory.systemTemp.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      await _recorder.start(const RecordConfig(encoder: AudioEncoder.aacLc), path: path);
+      _voicePath = path;
+    }
+  }
+
+  Future<void> _stopVoice() async {
+    final path = await _recorder.stop();
+    setState(() => _recording = false);
+    if (path != null) {
+      setState(() => _saving = true);
+      await _saveMedia(File(path), 'voice');
+    }
+  }
+
+  Future<void> _saveMedia(File file, String type) async {
     final repo = ref.read(memoryRepositoryProvider);
     final userId = ref.read(authServiceProvider).currentUser?.id;
     if (userId == null) return;
+    double? lat, lng;
+    try {
+      final pos = await Geolocator.getCurrentPosition();
+      lat = pos.latitude; lng = pos.longitude;
+    } catch (_) {} // ponytail: GPS optional, skip if denied
     final (_, error) = await repo.saveMemory(
-      albumId: widget.albumId,
-      userId: userId,
-      type: 'voice',
-      mediaFile: File(filePath), // ponytail: 'dart:io' File
+      albumId: widget.albumId, userId: userId, type: type, mediaFile: file, lat: lat, lng: lng,
     );
-    if (mounted && error == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Voice saved!')));
-      context.go('/albums/${widget.albumId}');
+    if (mounted) {
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save: ${error.message}')));
+      } else {
+        context.go('/albums/${widget.albumId}');
+      }
+      setState(() => _saving = false);
     }
   }
-}
-
-class _CapturePlaceholder extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _CapturePlaceholder({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 12),
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 16)),
-          const SizedBox(height: 8),
-          Text('Camera/record packages will integrate here',
-              style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-        ],
-      );
-}
-
-class _VoiceCaptureWidget extends StatefulWidget {
-  final void Function(String?) onSaved;
-  const _VoiceCaptureWidget({required this.onSaved});
-
-  @override
-  State<_VoiceCaptureWidget> createState() => _VoiceCaptureWidgetState();
-}
-
-class _VoiceCaptureWidgetState extends State<_VoiceCaptureWidget> {
-  bool _recording = false;
-
-  @override
-  Widget build(BuildContext context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          GestureDetector(
-            onTap: () => setState(() => _recording = !_recording),
-            child: Container(
-              width: 80, height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _recording ? Colors.red : Theme.of(context).colorScheme.primary,
-              ),
-              child: Icon(_recording ? Icons.stop : Icons.mic, color: Colors.white, size: 36),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(_recording ? 'Recording...' : 'Tap to record',
-              style: TextStyle(color: Colors.grey[600])),
-          if (_recording) ...[
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () {
-                setState(() => _recording = false);
-                // ponytail: 'record' package integration returns a file path.
-                // Stub — actual Record.start() and Record.stop() replace this.
-                widget.onSaved(null);
-              },
-              child: const Text('Stop & Save'),
-            ),
-          ],
-        ],
-      );
 }
