@@ -21,9 +21,9 @@ class AlbumListScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(10),
           child: CircleAvatar(backgroundColor: Colors.orange, child: Text(initials, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
         ),
-        title: const Text('relog2', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('RELOG2', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2)),
         centerTitle: true,
-        actions: const [IconButton(icon: Icon(Icons.search), onPressed: null)], // ponytail: no-op, add when search exists
+        actions: const [IconButton(icon: Icon(Icons.search), onPressed: null)],
       ),
       body: albums.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -31,11 +31,11 @@ class AlbumListScreen extends ConsumerWidget {
         data: (list) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
-            child: Text('Shared Albums', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+            child: Text('Shared Treasures', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Text('Collaborate and relive moments together.', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+            child: Text('Chronicle your expeditions and collaborative discoveries with your fellow explorers.', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -43,13 +43,13 @@ class AlbumListScreen extends ConsumerWidget {
               width: double.infinity,
               child: FilledButton.icon(
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
+                  backgroundColor: const Color(0xFF5D1A1A),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                 ),
                 icon: const Icon(Icons.add, size: 20),
-                label: const Text('+ Create New Album', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                label: const Text('CREATE NEW ALBUM', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1)),
                 onPressed: () => context.go('/albums/create'),
               ),
             ),
@@ -72,11 +72,10 @@ class AlbumListScreen extends ConsumerWidget {
                       child: InkWell(
                         onTap: () => context.go('/albums/${a.id}'),
                         child: Column(children: [
-                          // ponytail: cover image placeholder block
                           Container(
                             height: 160,
-                            color: const Color(0xFFE8F5E9),
-                            child: Center(child: Icon(Icons.photo_album, size: 40, color: Colors.grey[400])),
+                            color: const Color(0xFFF5F0EB), // ponytail: parchment placeholder
+                            child: Center(child: Icon(Icons.explore, size: 40, color: const Color(0xFF5D1A1A).withValues(alpha: 0.3))),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(14),
@@ -84,14 +83,12 @@ class AlbumListScreen extends ConsumerWidget {
                               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                 Text(a.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                 const SizedBox(height: 4),
-                                // ponytail: timestamp from createdAt, relative formatting deferred
-                                Text('Active now', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                                Text('Last logged ${a.isActive ? 'now' : 'ended'}', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                               ])),
-                              // ponytail: photo count pill
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                                child: Text('${a.photoCount} Photos', style: TextStyle(color: Colors.grey[700], fontSize: 12, fontWeight: FontWeight.w500)),
+                                decoration: BoxDecoration(color: const Color(0xFFF5F0EB), borderRadius: BorderRadius.circular(12)),
+                                child: Text('${a.photoCount} Findings', style: TextStyle(color: const Color(0xFF5D1A1A), fontSize: 12, fontWeight: FontWeight.w600)),
                               ),
                             ]),
                           ),
