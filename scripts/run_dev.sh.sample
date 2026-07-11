@@ -2,6 +2,7 @@
 # ReLog2 dev runner — copy to run_dev.sh and fill in your R2 credentials.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+export PATH="$HOME/development/flutter/bin:$PATH"
 
 exec flutter run \
   --dart-define=R2_KEY=YOUR_R2_ACCESS_KEY \
