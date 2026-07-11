@@ -53,5 +53,20 @@ create table if not exists votes (
 insert into storage.buckets (id, name, public) values ('album-media', 'album-media', true)
 on conflict (id) do nothing;
 
--- ponytail: row-level security deferred. Add RLS policies when multi-tenant.
--- For now: anon key has full read, authenticated users have full CRUD.
+-- ponytail: RLS policies. Authenticated = full CRUD on own data, read all albums/members.
+alter table albums enable row level security;
+alter table members enable row level security;
+alter table memories enable row level security;
+
+create policy "albums_select" on albums for select to authenticated using (true);
+create policy "albums_insert" on albums for insert to authenticated with check (true);
+create policy "albums_update" on albums for update to authenticated using (auth.uid() = creator_id);
+
+create policy "members_select" on members for select to authenticated using (true);
+create policy "members_insert" on members for insert to authenticated with check (true);
+create policy "members_delete" on members for delete to authenticated using (auth.uid() = (select creator_id from albums where id = album_id));
+
+create policy "memories_select" on memories for select to authenticated using (true);
+create policy "memories_insert" on memories for insert to authenticated with check (auth.uid() = user_id);
+create policy "memories_update" on memories for update to authenticated using (auth.uid() = user_id);
+create policy "memories_delete" on memories for delete to authenticated using (auth.uid() = user_id);
