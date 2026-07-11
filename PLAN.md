@@ -1,6 +1,6 @@
 # ReLog2 — Build Plan
 
-> Status: **Foundations locked. Product core = TBD (jaxon will define).** Do not run `flutter create` or write feature code until the core is confirmed and the Feature Map (§3) is filled in.
+> Status: **Foundations locked. Product core = DEFINED.** Feature Map (§3) filled — build Tier 1 (MVP) first, Tier 2 post-launch.
 
 ---
 
@@ -89,15 +89,78 @@ These are loaded into `~/.hermes/skills` (and the Ponytail plugin is enabled). T
 
 ---
 
-## 3. Feature Map (TBD — fill once jaxon defines the core)
+## 3. Feature Map
 
-> Pending product core decision. When defined, enumerate features here, each as:
-> `feature_name` → screens, view models, repositories, services, Firestore collections.
+> **Product core locked** — ReLog2 is a travel-album app where every memory is a
+> map pin. A group trip gets one shared album; members capture photos, video,
+> voice, and timeline notes (before / mid / confession / after). Map shows
+> markers + replay animation (Tier 2). End-of-trip superlatives (Tier 2).
+> Per-album cloud pricing: 1 free, then $1.99/album or $9.99/10-pack.
 
-Placeholder skeleton (will be replaced):
-- `auth` — login / register / password reset (Firebase Auth).
-- `memories` — CRUD on memory entities (Firestore), media upload (Storage).
-- `home` / `profile` — shell + navigation.
+### 3.1 Tier 1 — MVP (build first)
+
+| Feature | Screens | ViewModel | Repository | Firebase |
+|---|---|---|---|---|
+| **auth** | `LoginScreen`, `RegisterScreen` | `AuthViewModel` | — (Firebase Auth SDK directly) | Firebase Auth (email+pass, Google) |
+| **albums** | `CreateAlbumScreen`, `JoinAlbumScreen`, `AlbumDetailScreen` | `AlbumListViewModel`, `AlbumDetailViewModel` | `AlbumRepository` | Firestore `albums`, `members` |
+| **memories** | `CaptureScreen` (photo/video/voice unified), `MemoryDetailScreen` | `CaptureViewModel`, `MemoryListViewModel` | `MemoryRepository` | Firestore `memories`, Storage `/albums/{id}/*` |
+| **map** | `MapScreen` (album markers) | `MapViewModel` | `MemoryRepository` (reuse) | Firestore `memories` (lat/lng + type + thumb) |
+| **notes** | `NoteEditorScreen` (before/mid/confession/after) | `NoteViewModel` | `MemoryRepository` (reuse — note is a memory with `type=note`) | Firestore `memories` |
+
+- No separate "home" screen — albums list IS home. No profile screen yet.
+- `CaptureScreen` delegates to `camera` / `record` packages; throws to the platform's native camera UI. No custom camera controls.
+- Confession notes: gated by `album.status == 'ended'` on the client; no crypto.
+- Map uses `flutter_map` + OpenStreetMap tiles (free, no API key). Reuse `MemoryRepository` — query album memories with non-null lat/lng.
+
+### 3.2 Tier 2 — post-MVP (build after Tier 1 has users)
+
+| Feature | Builds on | What's new |
+|---|---|---|
+| **travel animation** (car/plane) | MapScreen + existing GPS waypoints | `AnimationController` per marker, `latlong2` Haversine calc. No live GPS — replay captured waypoints. |
+| **superlatives voting** | memories + album members | `votes` subcollection, end-of-trip Cloud Function OR client-side calc. Wanderer = max distance from group centroid. Night Owl = max hour per member. Golden Shutter = photo vote tally. |
+| **billing** | auth + albums | Reuse Stripe pattern from espressgo.sg. Cloud Function: `GET /checkout`. Count `photoCount` per album; enforce 1,000 cap. One-time SKU: `album_credit` ($1.99) or `album_10pack` ($9.99). First album always free. |
+| **democratic delete** | album members | Creator can always delete. Group vote deletion is a TBD v2 decision (unanimous = deadlock risk at 40 pax). |
+
+### 3.3 Firestore schema
+
+```
+albums/{albumId}
+  ├── title: string
+  ├── creatorId: string (uid)
+  ├── inviteCode: string (6-char alphanumeric)
+  ├── status: "active" | "ended"
+  ├── photoCount: number
+  ├── membersCount: number
+  ├── createdAt: timestamp
+  └── endedAt: timestamp | null
+
+members/{memberId}                          // composite key: albumId_userId
+  ├── albumId: string
+  ├── userId: string (uid)
+  ├── role: "creator" | "member"
+  └── joinedAt: timestamp
+
+memories/{memoryId}
+  ├── albumId: string
+  ├── userId: string
+  ├── type: "photo" | "video" | "voice" | "note"
+  ├── notePhase: "before" | "mid" | "confession" | "after" | null
+  ├── storagePath: string | null           // null for notes (text-only)
+  ├── textBody: string | null              // only for notes
+  ├── lat: number | null
+  ├── lng: number | null
+  ├── capturedAt: timestamp
+  └── isConfessionLocked: bool             // true until album.status=ended
+
+albums/{albumId}/votes/{voteId}             // Tier 2 subcollection
+  ├── memoryId: string                      // the photo being voted on
+  ├── voterId: string
+  └── category: "goldenShutter"
+```
+
+- No subcollection nesting except `votes` under albums (Tier 2 only).
+- `photoCount` incremented atomically via `FieldValue.increment(1)` on capture.
+- Index: `albums/{albumId}/memories` query by `lat,lng` (range) for map view.
 
 ---
 
