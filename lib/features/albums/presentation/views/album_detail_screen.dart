@@ -30,7 +30,7 @@ class AlbumDetailScreen extends ConsumerWidget {
                   );
                 }
               },
-              child: const Text('End Trip', style: TextStyle(color: Colors.red)),
+              child: Text('End Trip', style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ),
         ],
       ),

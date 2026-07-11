@@ -22,7 +22,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       body: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: Column(
         mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.map, size: 64, color: Colors.deepPurple),
+        const Icon(Icons.map, size: 64, color: Colors.amber),
         const SizedBox(height: 16),
         Text('ReLog2', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 8),
@@ -31,7 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)), keyboardType: TextInputType.emailAddress),
         const SizedBox(height: 12),
         TextField(controller: _pass, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock)), obscureText: true),
-        if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: const TextStyle(color: Colors.red))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error))),
         const SizedBox(height: 24),
         SizedBox(width: double.infinity, child: FilledButton(
           onPressed: _loading ? null : _login,

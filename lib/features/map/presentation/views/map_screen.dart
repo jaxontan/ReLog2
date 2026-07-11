@@ -40,7 +40,7 @@ class MapScreen extends ConsumerWidget {
                   point: LatLng(m.lat!, m.lng!),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     Icon(m.isNote ? Icons.edit_location : Icons.location_on,
-                        color: m.isNote ? Colors.deepPurple : Colors.red, size: 30),
+                        color: m.isNote ? Theme.of(context).colorScheme.primary : Colors.red, size: 30),
                     if (m.type == 'photo')
                       const Icon(Icons.camera_alt, size: 14, color: Colors.black54),
                   ]),
