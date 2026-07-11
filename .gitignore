@@ -29,3 +29,5 @@ Thumbs.db
 # --- Secrets / local env ---
 .env
 *.local
+# R2 dev runner (contains secrets, use .sample template)
+scripts/run_dev.sh

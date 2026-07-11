@@ -2,13 +2,14 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/storage/r2_storage.dart';
 import '../models/memory.dart';
 
 final memoryRepositoryProvider = Provider<MemoryRepository>((_) => MemoryRepository());
 
 class MemoryRepository {
   final SupabaseClient _client = Supabase.instance.client;
-  static const _bucket = 'album-media';
+  final R2Storage _r2 = R2Storage();
 
   Future<(Memory?, Failure?)> saveMemory({
     required String albumId, required String userId, required String type,
@@ -20,7 +21,7 @@ class MemoryRepository {
       if (mediaFile != null) {
         final ext = mediaFile.path.split('.').last;
         final path = 'albums/$albumId/${DateTime.now().millisecondsSinceEpoch}.$ext';
-        await _client.storage.from(_bucket).upload(path, mediaFile);
+        await _r2.upload(path, mediaFile);
         storagePath = path;
       }
       final res = await _client.from('memories').insert({
@@ -62,7 +63,7 @@ class MemoryRepository {
   }
 
   String? publicUrl(String storagePath) {
-    try { return _client.storage.from(_bucket).getPublicUrl(storagePath); }
+    try { return _r2.publicUrl(storagePath); }
     catch (_) { return null; }
   }
 

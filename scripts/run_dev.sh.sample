@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# ReLog2 dev runner — copy to run_dev.sh and fill in your R2 credentials.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+exec flutter run \
+  --dart-define=R2_KEY=YOUR_R2_ACCESS_KEY \
+  --dart-define=R2_SECRET=YOUR_R2_SECRET_KEY \
+  --dart-define=R2_ENDPOINT=https://YOUR_ACCOUNT.r2.cloudflarestorage.com \
+  "$@"
