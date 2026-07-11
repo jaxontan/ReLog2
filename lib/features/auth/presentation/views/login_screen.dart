@@ -22,12 +22,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter, end: Alignment.bottomCenter,
-            colors: [scheme.primary, scheme.primaryContainer],
-          ),
-        ),
+        decoration: BoxDecoration(gradient: LinearGradient(
+          begin: Alignment.topCenter, end: Alignment.bottomCenter,
+          colors: [scheme.primary, const Color(0xFF3A1010)],
+        )),
         child: SafeArea(
           child: Center(child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -35,40 +33,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 48),
               Container(
                 width: 80, height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
                 child: const Icon(Icons.explore, size: 40, color: Colors.white),
               ),
               const SizedBox(height: 16),
-              Text('ReLog2', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+              Text('RELOG2', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2)),
               const SizedBox(height: 4),
-              Text('Memories as map markers', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
+              Text('Chronicle your expeditions.', style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 14)),
               const SizedBox(height: 40),
               Card(
-                color: scheme.surface,
+                color: const Color(0xFFF5F0EB),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 child: Padding(padding: const EdgeInsets.all(20), child: Column(children: [
-                  TextField(controller: _email, decoration: InputDecoration(labelText: 'Email', prefixIcon: const Icon(Icons.email), filled: true, fillColor: scheme.surfaceContainerHighest, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none))),
+                  TextField(controller: _email, decoration: _inputDeco('Email', Icons.email)),
                   const SizedBox(height: 12),
-                  TextField(controller: _pass, decoration: InputDecoration(labelText: 'Password', prefixIcon: const Icon(Icons.lock), filled: true, fillColor: scheme.surfaceContainerHighest, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)), obscureText: true),
+                  TextField(controller: _pass, decoration: _inputDeco('Password', Icons.lock), obscureText: true),
                   if (_error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_error!, style: TextStyle(color: scheme.error, fontSize: 13))),
                   const SizedBox(height: 20),
                   SizedBox(width: double.infinity, child: FilledButton(
-                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    style: FilledButton.styleFrom(backgroundColor: scheme.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                     onPressed: _loading ? null : _login,
-                    child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Sign In', style: TextStyle(fontSize: 16)),
+                    child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('BEGIN EXPLORATION', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1)),
                   )),
                 ])),
               ),
               const SizedBox(height: 16),
-              TextButton(onPressed: () => context.go('/register'), child: Text("Don't have an account? Register", style: TextStyle(color: Colors.white.withValues(alpha: 0.9)))),
+              TextButton(onPressed: () => context.go('/register'), child: Text('No expedition yet? Join one.', style: TextStyle(color: Colors.white.withValues(alpha: 0.85)))),
               const SizedBox(height: 48),
             ]),
           )),
         ),
       ),
+    );
+  }
+
+  InputDecoration _inputDeco(String label, IconData icon) {
+    final scheme = Theme.of(context).colorScheme;
+    return InputDecoration(
+      labelText: label, prefixIcon: Icon(icon, color: scheme.primary),
+      filled: true, fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: scheme.primary.withValues(alpha: 0.3))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: scheme.primary, width: 1.5)),
     );
   }
 
