@@ -67,7 +67,7 @@ class AlbumListScreen extends ConsumerWidget {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: () => context.go('/albums/${a.id}'),
