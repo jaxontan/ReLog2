@@ -32,9 +32,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8F6),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(children: [
-            const SizedBox(height: 36),
+        child: LayoutBuilder(builder: (ctx, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(
               width: 80, height: 80,
               decoration: BoxDecoration(
@@ -113,7 +115,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             const SizedBox(height: 48),
           ]),
-        ),
+            ),
+          );
+        })),
       ),
     );
   }
