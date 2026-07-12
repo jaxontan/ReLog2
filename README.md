@@ -1,26 +1,24 @@
 # ReLog2
 
-A Flutter app (pre-development scaffold). Product core **TBD** — see [PLAN.md](./PLAN.md).
+Travel-album app — every memory is a map pin. Tier 1 MVP built.
+See [PLAN.md](./PLAN.md) for architecture + feature map.
 
 ## Status
 
-- [x] Git repo initialized (`main`) + GitHub remote
-- [x] Project config scaffolded (`.gitignore`, `analysis_options.yaml`)
-- [ ] Flutter SDK + Dart installed
-- [ ] `flutter create` scaffold (platform dirs, no feature screens)
-- [ ] Firebase project + CLI configured
-- [ ] Product core decision (drives the Feature Map in PLAN.md §3)
+- [x] Git repo (`main`) + GitHub remote
+- [x] Flutter SDK 3.44+ + deps
+- [x] Product core locked (PLAN.md §3)
+- [x] Supabase all-in (auth + data + storage)
+- [x] R2 photo storage (S3v4)
+- [x] 5 features: auth, albums, map, capture, notes
+- [x] `flutter analyze` = 0 errors
+- [ ] Supabase schema (paste `supabase/schema.sql` once in SQL Editor)
 
-## Skills & conventions
-
-This repo follows `PLAN.md` (architecture, naming, lint, Definition of Done).
-Hermes auto-loads the relevant `flutter/*` and `superpowers/*` skills system-wide;
-project-specific rules live in [`.hermes.md`](./.hermes.md).
-
-## Setup (once the SDK is installed)
+## Setup
 
 ```bash
 flutter pub get
-flutter analyze
-flutter test
+flutter analyze                         # 0 errors
+cp scripts/run_dev.sh.sample scripts/run_dev.sh  # fill R2 keys
+./scripts/run_dev.sh                    # build + run
 ```
