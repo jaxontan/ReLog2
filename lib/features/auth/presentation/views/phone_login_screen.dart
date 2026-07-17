@@ -1,31 +1,39 @@
-/// ponytail: Cartographer's Journal signup — same visual language as login.
+/// ponytail: Cartographer's Journal phone login — same visual language.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../app/design/design_system.dart';
 import '../view_models/auth_view_model.dart';
 
-class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({super.key});
+class PhoneLoginScreen extends ConsumerStatefulWidget {
+  const PhoneLoginScreen({super.key});
 
   @override
-  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<PhoneLoginScreen> createState() => _PhoneLoginScreenState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _email = TextEditingController();
-  final _pass = TextEditingController();
-  final _confirm = TextEditingController();
+class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
+  final _phone = TextEditingController();
   String? _error;
   bool _loading = false;
-  bool _agreed = false;
 
   @override
   void dispose() {
-    _email.dispose();
-    _pass.dispose();
-    _confirm.dispose();
+    _phone.dispose();
     super.dispose();
+  }
+
+  Future<void> _sendOtp() async {
+    final phone = _phone.text.trim();
+    if (phone.isEmpty) return;
+    setState(() { _loading = true; _error = null; });
+    final err = await ref.read(sendPhoneOtpAction)(phone);
+    if (mounted) {
+      setState(() { _loading = false; _error = err; });
+      if (err == null) {
+        context.go('/login/phone/verify', extra: phone);
+      }
+    }
   }
 
   @override
@@ -53,13 +61,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(color: scheme.onSurface.withValues(alpha: 0.15), width: 2),
                         ),
-                        child: Icon(Icons.menu_book_outlined, size: 36, color: scheme.primary),
+                        child: Icon(Icons.phone_iphone_outlined, size: 36, color: scheme.primary),
                       ),
                       const SizedBox(height: DSSpacing.md),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: DSSpacing.xl),
                         child: Text(
-                          'Start Your Journal',
+                          'Sign in with Phone',
                           style: DSTypography.headlineMedium.copyWith(
                             fontWeight: FontWeight.bold,
                             color: scheme.onSurface,
@@ -76,37 +84,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               TextField(
-                                controller: _email,
+                                controller: _phone,
                                 decoration: const InputDecoration(
-                                  hintText: 'Email',
-                                  prefixIcon: Icon(Icons.email_outlined),
+                                  hintText: 'Phone Number',
+                                  prefixIcon: Icon(Icons.phone_outlined),
                                 ),
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.next,
-                                autofillHints: const [AutofillHints.email],
-                              ),
-                              const SizedBox(height: DSSpacing.md),
-                              TextField(
-                                controller: _pass,
-                                decoration: const InputDecoration(
-                                  hintText: 'Password',
-                                  prefixIcon: Icon(Icons.lock_outline),
-                                ),
-                                obscureText: true,
-                                textInputAction: TextInputAction.next,
-                                autofillHints: const [AutofillHints.newPassword],
-                              ),
-                              const SizedBox(height: DSSpacing.md),
-                              TextField(
-                                controller: _confirm,
-                                decoration: const InputDecoration(
-                                  hintText: 'Confirm Password',
-                                  prefixIcon: Icon(Icons.lock_outline),
-                                ),
-                                obscureText: true,
+                                keyboardType: TextInputType.phone,
                                 textInputAction: TextInputAction.done,
-                                autofillHints: const [AutofillHints.newPassword],
-                                onSubmitted: (_) => _loading ? null : _register(),
+                                onSubmitted: (_) => _loading ? null : _sendOtp(),
                               ),
                               if (_error != null) ...[
                                 const SizedBox(height: DSSpacing.md),
@@ -116,30 +101,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   textAlign: TextAlign.center,
                                 ),
                               ],
+                              const SizedBox(height: DSSpacing.xl),
+                              FilledButton(
+                                onPressed: _loading ? null : _sendOtp,
+                                child: _loading
+                                    ? const SizedBox(
+                                        width: 20, height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      )
+                                    : const Text('Send Code', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              ),
+                              const SizedBox(height: DSSpacing.md),
+                              TextButton(
+                                onPressed: () => context.go('/login'),
+                                child: const Text('Use Email Instead'),
+                              ),
                             ],
                           ),
-                        ),
-                      ),
-                      // Buttons
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: DSSpacing.xl),
-                        child: Column(
-                          children: [
-                            FilledButton(
-                              onPressed: _loading ? null : _register,
-                              child: _loading
-                                  ? const SizedBox(
-                                      width: 20, height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                    )
-                                  : const Text('Open Journal', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                            ),
-                            const SizedBox(height: DSSpacing.md),
-                            TextButton(
-                              onPressed: () => context.go('/login'),
-                              child: const Text('Already have a journal?'),
-                            ),
-                          ],
                         ),
                       ),
                       // Agreement
@@ -152,8 +130,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             SizedBox(
                               width: 20, height: 20,
                               child: Checkbox(
-                                value: _agreed,
-                                onChanged: (v) => setState(() => _agreed = v ?? false),
+                                value: false,
+                                onChanged: (_) {},
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DSRadius.sm)),
                                 side: BorderSide(color: scheme.outline),
                               ),
@@ -187,16 +165,5 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _register() async {
-    if (_pass.text != _confirm.text) {
-      setState(() => _error = 'Passwords do not match');
-      return;
-    }
-    if (_email.text.trim().isEmpty) return;
-    setState(() { _loading = true; _error = null; });
-    final err = await ref.read(registerAction)(_email.text.trim(), _pass.text.trim());
-    if (mounted) setState(() { _loading = false; _error = err; });
   }
 }

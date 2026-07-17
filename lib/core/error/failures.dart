@@ -23,3 +23,8 @@ class StorageFailure extends Failure {
   final String message;
   const StorageFailure([this.message = 'Storage operation failed']);
 }
+
+class MessageFailure extends Failure {
+  final String message;
+  const MessageFailure([this.message = 'Message operation failed']);
+}

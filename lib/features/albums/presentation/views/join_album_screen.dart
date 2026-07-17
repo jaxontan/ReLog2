@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+import '../../../../../app/design/design_system.dart';
 import '../view_models/album_view_model.dart';
 import '../../../auth/presentation/view_models/auth_view_model.dart';
 import '../../../../core/error/failures.dart';
@@ -24,35 +26,76 @@ class _JoinAlbumScreenState extends ConsumerState<JoinAlbumScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Join Album')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+    final scheme = context.scheme;
+
+    return DSPage(
+      appBar: AppBar(
+        title: const Text('Join Journal'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(DSSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
+            // Header
+            Container(
+              width: 80, height: 80,
+              decoration: BoxDecoration(
+                color: scheme.secondaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.vpn_key_outlined, size: 40, color: scheme.onSecondaryContainer),
+            ),
+            const SizedBox(height: DSSpacing.lg),
+            Text(
+              'Join a Journal',
+              style: DSTypography.headlineMedium.copyWith(fontWeight: FontWeight.bold, color: scheme.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DSSpacing.sm),
+            Text(
+              'Enter the 6-character invite code shared by the journal creator.',
+              style: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DSSpacing.xxl),
+            // Form
+            DSTextField(
               controller: _codeCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Invite Code',
-                hintText: 'e.g. ABC123',
-                prefixIcon: Icon(Icons.vpn_key),
+              hint: 'e.g. ABC123',
+              label: 'Invite Code',
+              prefixIcon: Icons.vpn_key_outlined,
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.content_paste_outlined),
+                onPressed: () async {
+                  final data = await Clipboard.getData(Clipboard.kTextPlain);
+                  if (data?.text != null) {
+                    _codeCtrl.text = data!.text!.trim().toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+                    if (_codeCtrl.text.length > 6) _codeCtrl.text = _codeCtrl.text.substring(0, 6);
+                    setState(() {}); // Update character count
+                  }
+                },
+                tooltip: 'Paste from clipboard',
               ),
               textCapitalization: TextCapitalization.characters,
               maxLength: 6,
+              autofocus: true,
+              textInputAction: TextInputAction.done,
               onSubmitted: (_) => _join(),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Enter the 6-character code shared by the album creator.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DSSpacing.xl),
             FilledButton(
               onPressed: _joining || _codeCtrl.text.length < 6 ? null : _join,
               child: _joining
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Join'),
+                  ? const SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Join Journal'),
             ),
           ],
         ),
@@ -65,14 +108,15 @@ class _JoinAlbumScreenState extends ConsumerState<JoinAlbumScreen> {
     if (code.length != 6) return;
     setState(() => _joining = true);
     final repo = ref.read(albumRepositoryProvider);
-    // ponytail: direct repo call, joinAlbum needs a user ID. Grab from auth.
     final auth = ref.read(authServiceProvider);
     final userId = auth.currentUser?.id;
     if (userId == null) return;
     final (album, error) = await repo.joinAlbum(code, userId);
     if (mounted) {
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text((error as AlbumFailure).message)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text((error as AlbumFailure).message)),
+        );
         setState(() => _joining = false);
       } else if (album != null) {
         context.go('/albums/${album.id}');

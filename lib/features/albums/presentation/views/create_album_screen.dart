@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../app/design/design_system.dart';
 import '../view_models/album_view_model.dart';
 import '../../../auth/presentation/view_models/auth_view_model.dart';
 import '../../../../core/error/failures.dart';
@@ -24,34 +25,68 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Create Album')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+    final scheme = context.scheme;
+
+    return DSPage(
+      appBar: AppBar(
+        title: const Text('Create Journal'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(DSSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _titleCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Album Name',
-                hintText: 'e.g. Japan 2026',
-                prefixIcon: Icon(Icons.album),
+            // Header
+            Container(
+              width: 80, height: 80,
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer,
+                shape: BoxShape.circle,
               ),
+              child: Icon(Icons.menu_book_outlined, size: 40, color: scheme.onPrimaryContainer),
+            ),
+            const SizedBox(height: DSSpacing.lg),
+            Text(
+              'New Journal',
+              style: DSTypography.headlineMedium.copyWith(fontWeight: FontWeight.bold, color: scheme.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DSSpacing.sm),
+            Text(
+              'Give your journal a name and share the invite code with your companions.',
+              style: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DSSpacing.xxl),
+            // Form
+            DSTextField(
+              controller: _titleCtrl,
+              hint: 'e.g. Japan 2026',
+              label: 'Journal Name',
+              prefixIcon: Icons.album_outlined,
               autofocus: true,
+              textInputAction: TextInputAction.done,
               onSubmitted: (_) => _create(),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'An invite code will be generated to share with your group.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            const SizedBox(height: DSSpacing.md),
+            Text(
+              'A unique 6-character invite code will be generated automatically.',
+              style: DSTypography.bodySmall.copyWith(color: scheme.onSurfaceVariant),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DSSpacing.xl),
             FilledButton(
               onPressed: _creating ? null : _create,
               child: _creating
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Create'),
+                  ? const SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Create Journal'),
             ),
           ],
         ),
@@ -69,7 +104,9 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
     final (albumId, error) = await repo.createAlbum(title, userId);
     if (mounted) {
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text((error as AlbumFailure).message)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text((error as AlbumFailure).message)),
+        );
         setState(() => _creating = false);
       } else {
         context.go('/albums/$albumId');

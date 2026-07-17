@@ -22,6 +22,22 @@ final registerAction = Provider.autoDispose<Future<String?> Function(String, Str
   };
 });
 
+/// Sends an OTP to the given phone number.
+final sendPhoneOtpAction = Provider.autoDispose<Future<String?> Function(String)>((ref) {
+  return (phone) async {
+    final error = await ref.read(authServiceProvider).signInWithPhone(phone);
+    return error?.message;
+  };
+});
+
+/// Verifies the OTP code for phone authentication.
+final verifyPhoneOtpAction = Provider.autoDispose<Future<String?> Function(String, String)>((ref) {
+  return (phone, code) async {
+    final (_, error) = await ref.read(authServiceProvider).verifyPhoneOtp(phone, code);
+    return error?.message;
+  };
+});
+
 final signOutAction = Provider.autoDispose<Future<void> Function()>((ref) {
   return () => ref.read(authServiceProvider).signOut();
 });

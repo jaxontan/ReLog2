@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../app/design/design_system.dart';
 import '../view_models/album_view_model.dart';
 import '../../../auth/presentation/view_models/auth_view_model.dart';
-import '../../../auth/data/services/auth_service.dart';
+import '../../data/models/album.dart';
 
 class AlbumListScreen extends ConsumerWidget {
   const AlbumListScreen({super.key});
@@ -11,95 +12,190 @@ class AlbumListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final albums = ref.watch(albumListProvider);
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = context.scheme;
     final user = ref.watch(authServiceProvider).currentUser;
     final initials = (user?.email ?? '?')[0].toUpperCase();
 
-    return Scaffold(
+    return DSPage(
       appBar: AppBar(
         leading: Padding(
-          padding: const EdgeInsets.all(10),
-          child: CircleAvatar(backgroundColor: Colors.orange, child: Text(initials, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+          padding: const EdgeInsets.all(DSSpacing.md),
+          child: CircleAvatar(
+            backgroundColor: scheme.primaryContainer,
+            child: Text(
+              initials,
+              style: DSTypography.labelLarge.copyWith(color: scheme.onPrimaryContainer, fontWeight: FontWeight.bold),
+            ),
+          ),
         ),
-        title: const Text('RELOG2', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2)),
+        title: Text('RELOG2', style: DSTypography.titleLarge.copyWith(fontWeight: FontWeight.w700, letterSpacing: 2)),
         centerTitle: true,
-        actions: const [IconButton(icon: Icon(Icons.search), onPressed: null)],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search_outlined),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: const Text('Search coming soon!'), behavior: SnackBarBehavior.floating),
+              );
+            },
+            tooltip: 'Search',
+          ),
+        ],
       ),
-      body: albums.when(
+      child: albums.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (list) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
-            child: Text('Shared Treasures', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Text('Chronicle your expeditions and collaborative discoveries with your fellow explorers.', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5D1A1A),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                icon: const Icon(Icons.add, size: 20),
-                label: const Text('CREATE NEW ALBUM', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1)),
-                onPressed: () => context.go('/albums/create'),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (list.isEmpty)
-            const Center(child: Padding(padding: EdgeInsets.all(48), child: Text('No albums yet', style: TextStyle(fontSize: 16, color: Colors.grey))))
-          else
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 80),
-                itemCount: list.length,
-                itemBuilder: (_, i) {
-                  final a = list[i];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    child: Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        onTap: () => context.go('/albums/${a.id}'),
-                        child: Column(children: [
-                          Container(
-                            height: 160,
-                            color: const Color(0xFFF5F0EB), // ponytail: parchment placeholder
-                            child: Center(child: Icon(Icons.explore, size: 40, color: const Color(0xFF5D1A1A).withValues(alpha: 0.3))),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(14),
-                            child: Row(children: [
-                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text(a.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                const SizedBox(height: 4),
-                                Text('Last logged ${a.isActive ? 'now' : 'ended'}', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
-                              ])),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(color: const Color(0xFFF5F0EB), borderRadius: BorderRadius.circular(12)),
-                                child: Text('${a.photoCount} Findings', style: TextStyle(color: const Color(0xFF5D1A1A), fontSize: 12, fontWeight: FontWeight.w600)),
-                              ),
-                            ]),
-                          ),
-                        ]),
-                      ),
+        error: (e, _) => _ErrorState(message: e.toString()),
+        data: (list) => CustomScrollView(
+          slivers: [
+            // Header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(DSSpacing.xl, DSSpacing.xl, DSSpacing.xl, DSSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Shared Journals', style: DSTypography.headlineSmall.copyWith(fontWeight: FontWeight.bold, color: scheme.onSurface)),
+                    const SizedBox(height: DSSpacing.xs),
+                    Text(
+                      'Chronicle your expeditions and collaborative discoveries with your fellow explorers.',
+                      style: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant),
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
             ),
-        ]),
+            // Create button
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: DSSpacing.xl),
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.add, size: DSIconSize.sm),
+                  label: const Text('CREATE NEW JOURNAL'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: DSSpacing.md),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DSRadius.full)),
+                    textStyle: DSTypography.labelLarge.copyWith(letterSpacing: 1),
+                  ),
+                  onPressed: () => context.go('/albums/create'),
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: DSSpacing.md)),
+            // List
+            if (list.isEmpty)
+              SliverFillRemaining(
+                child: DSEmptyState(
+                  icon: Icons.album_outlined,
+                  title: 'No Journals Yet',
+                  message: 'Create your first journal to start chronicling adventures with friends.',
+                  action: FilledButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create Journal'),
+                    onPressed: () => context.go('/albums/create'),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: DSSpacing.lg, vertical: DSSpacing.md),
+                sliver: SliverList.separated(
+                  itemCount: list.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: DSSpacing.md),
+                  itemBuilder: (_, i) {
+                    final a = list[i];
+                    return _AlbumCard(album: a);
+                  },
+                ),
+              ),
+            const SliverToBoxAdapter(child: SizedBox(height: DSSpacing.xxl)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AlbumCard extends StatelessWidget {
+  final Album album;
+  const _AlbumCard({required this.album});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.scheme;
+
+    return DSCard(
+      onTap: () => context.go('/albums/${album.id}'),
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Cover image placeholder
+          Container(
+            height: 160,
+            width: double.infinity,
+            color: scheme.surfaceContainerHighest,
+            child: Center(
+              child: Icon(Icons.explore_outlined, size: 40, color: scheme.onSurfaceVariant.withValues(alpha: 0.3)),
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(DSSpacing.lg),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(album.title, style: DSTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, color: scheme.onSurface)),
+                      const SizedBox(height: DSSpacing.xs),
+                      Text(
+                        album.isActive ? 'Active journey' : 'Journey ended',
+                        style: DSTypography.bodySmall.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: DSSpacing.md, vertical: DSSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(DSRadius.full),
+                  ),
+                  child: Text(
+                    '${album.photoCount} findings',
+                    style: DSTypography.labelSmall.copyWith(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  const _ErrorState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.scheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DSSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: scheme.error),
+            const SizedBox(height: DSSpacing.md),
+            Text('Error loading journals', style: DSTypography.titleMedium.copyWith(color: scheme.onSurface)),
+            const SizedBox(height: DSSpacing.sm),
+            Text(message, style: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant), textAlign: TextAlign.center),
+          ],
+        ),
       ),
     );
   }

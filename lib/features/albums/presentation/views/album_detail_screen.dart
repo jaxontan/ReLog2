@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+import '../../../../app/design/design_system.dart';
 import '../../../auth/presentation/view_models/auth_view_model.dart';
 import '../view_models/album_view_model.dart';
 
@@ -12,10 +14,15 @@ class AlbumDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final albumAsync = ref.watch(albumDetailProvider(albumId));
     final userId = ref.watch(authServiceProvider).currentUser?.id;
+    final scheme = context.scheme;
 
-    return Scaffold(
+    return DSPage(
       appBar: AppBar(
-        title: Text(albumAsync.asData?.value?.title ?? 'Album'),
+        title: Text(albumAsync.asData?.value?.title ?? 'Journal'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => context.pop(),
+        ),
         actions: [
           if (albumAsync.asData?.value != null &&
               albumAsync.asData!.value!.isActive &&
@@ -26,47 +33,171 @@ class AlbumDetailScreen extends ConsumerWidget {
                 if (ok && context.mounted) {
                   ref.invalidate(albumDetailProvider(albumId));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Trip ended! Memories are now frozen.')),
+                    SnackBar(
+                      content: const Text('Journey ended! Memories are now frozen.'),
+                      backgroundColor: scheme.primary,
+                      behavior: SnackBarBehavior.floating,
+                    ),
                   );
                 }
               },
-              child: Text('End Trip', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              child: Text('End Journey', style: TextStyle(color: scheme.error, fontWeight: FontWeight.w600)),
             ),
         ],
       ),
-      body: albumAsync.when(
+      child: albumAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(DSSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: scheme.error),
+                const SizedBox(height: DSSpacing.md),
+                Text('Error loading journal', style: DSTypography.titleMedium.copyWith(color: scheme.onSurface)),
+                const SizedBox(height: DSSpacing.sm),
+                Text(e.toString(), style: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant), textAlign: TextAlign.center),
+              ],
+            ),
+          ),
+        ),
         data: (album) => Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(DSSpacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(album.title, style: Theme.of(context).textTheme.headlineSmall),
-              const SizedBox(height: 4),
+              // Header
+              Text(album.title, style: DSTypography.headlineSmall.copyWith(color: scheme.onSurface)),
+              const SizedBox(height: DSSpacing.xs),
               Text(
-                '${album.membersCount} members · ${album.photoCount} photos',
-                style: TextStyle(color: Colors.grey[600]),
+                '${album.membersCount} companions · ${album.photoCount} findings',
+                style: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant),
               ),
               if (album.isActive) ...[
-                const SizedBox(height: 4),
-                Text('Code: ${album.inviteCode}',
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 16, letterSpacing: 2)),
+                const SizedBox(height: DSSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: DSSpacing.md, vertical: DSSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(DSRadius.full),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.vpn_key_outlined, size: DSIconSize.sm, color: scheme.onPrimaryContainer),
+                      const SizedBox(width: DSSpacing.xs),
+                      Text(
+                        'Code: ${album.inviteCode}',
+                        style: DSTypography.labelMedium.copyWith(
+                          color: scheme.onPrimaryContainer,
+                          fontFamily: 'monospace',
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: DSSpacing.sm),
+                      InkWell(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: album.inviteCode));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Invite code copied!'),
+                              backgroundColor: scheme.primary,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(DSRadius.full),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(Icons.content_copy_outlined, size: 16, color: scheme.onPrimaryContainer),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
-              const SizedBox(height: 24),
+              const SizedBox(height: DSSpacing.xl),
+              // Actions
               if (album.isActive) ...[
-                _ActionTile(icon: Icons.camera_alt, title: 'Capture Memory',
-                    subtitle: 'Photo, video, or voice', onTap: () => context.go('/albums/$albumId/capture')),
-                _ActionTile(icon: Icons.map, title: 'Map View',
-                    subtitle: 'See memories on the map', onTap: () => context.go('/albums/$albumId/map')),
-                _ActionTile(icon: Icons.edit_note, title: 'Before Trip Note',
-                    subtitle: 'Pre-trip thoughts', onTap: () => context.go('/albums/$albumId/notes/before')),
-                _ActionTile(icon: Icons.note_add, title: 'Mid-Trip Note',
-                    subtitle: 'In-the-moment thoughts', onTap: () => context.go('/albums/$albumId/notes/mid')),
-                _ActionTile(icon: Icons.lock, title: 'Confession Note',
-                    subtitle: 'Revealed after trip ends', onTap: () => context.go('/albums/$albumId/notes/confession')),
-                _ActionTile(icon: Icons.book, title: 'After Trip Journal',
-                    subtitle: 'Reflect on the journey', onTap: () => context.go('/albums/$albumId/notes/after')),
+                _ActionCard(
+                  icon: Icons.camera_alt_outlined,
+                  title: 'Capture Memory',
+                  subtitle: 'Photo, video, or voice',
+                  onTap: () => context.go('/albums/$albumId/capture'),
+                  color: scheme.primary,
+                ),
+                const SizedBox(height: DSSpacing.md),
+                _ActionCard(
+                  icon: Icons.map_outlined,
+                  title: 'Map View',
+                  subtitle: 'See memories on the map',
+                  onTap: () => context.go('/albums/$albumId/map'),
+                  color: scheme.secondary,
+                ),
+                const SizedBox(height: DSSpacing.md),
+                _ActionCard(
+                  icon: Icons.edit_note_outlined,
+                  title: 'Before Trip Note',
+                  subtitle: 'Pre-journey thoughts',
+                  onTap: () => context.go('/albums/$albumId/notes/before'),
+                  color: scheme.tertiary,
+                ),
+                const SizedBox(height: DSSpacing.md),
+                _ActionCard(
+                  icon: Icons.note_add_outlined,
+                  title: 'Mid-Trip Note',
+                  subtitle: 'In-the-moment thoughts',
+                  onTap: () => context.go('/albums/$albumId/notes/mid'),
+                  color: scheme.primary,
+                ),
+                const SizedBox(height: DSSpacing.md),
+                _ActionCard(
+                  icon: Icons.lock_outline,
+                  title: 'Confession Note',
+                  subtitle: 'Revealed after journey ends',
+                  onTap: () => context.go('/albums/$albumId/notes/confession'),
+                  color: scheme.error,
+                ),
+                const SizedBox(height: DSSpacing.md),
+                _ActionCard(
+                  icon: Icons.book_outlined,
+                  title: 'After Trip Journal',
+                  subtitle: 'Reflect on the journey',
+                  onTap: () => context.go('/albums/$albumId/notes/after'),
+                  color: scheme.secondary,
+                ),
+                const SizedBox(height: DSSpacing.md),
+                _ActionCard(
+                  icon: Icons.chat_bubble_outline,
+                  title: 'Group Chat',
+                  subtitle: 'Chat with your companions',
+                  onTap: () => context.go('/albums/$albumId/chat?title=${Uri.encodeComponent(album.title)}'),
+                  color: scheme.primary,
+                ),
+              ] else ...[
+                // Ended state
+                DSCard(
+                  padding: const EdgeInsets.all(DSSpacing.lg),
+                  child: Column(
+                    children: [
+                      Icon(Icons.flag_outlined, size: 48, color: scheme.primary),
+                      const SizedBox(height: DSSpacing.md),
+                      Text(
+                        'Journey Completed',
+                        style: DSTypography.titleLarge.copyWith(color: scheme.onSurface),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: DSSpacing.sm),
+                      Text(
+                        'This journal has ended. All memories are preserved. Confession notes are now revealed.',
+                        style: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ],
           ),
@@ -76,11 +207,52 @@ class AlbumDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ActionTile extends StatelessWidget {
-  final IconData icon; final String title, subtitle; final VoidCallback onTap;
-  const _ActionTile({required this.icon, required this.title, required this.subtitle, required this.onTap});
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final Color color;
+
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    required this.color,
+  });
+
   @override
-  Widget build(BuildContext context) => Card(
-    child: ListTile(leading: Icon(icon), title: Text(title), subtitle: Text(subtitle), onTap: onTap),
-  );
+  Widget build(BuildContext context) {
+    final scheme = context.scheme;
+
+    return DSCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(DSSpacing.lg),
+      child: Row(
+        children: [
+          Container(
+            width: 48, height: 48,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(DSRadius.md),
+            ),
+            child: Icon(icon, color: color, size: DSIconSize.md),
+          ),
+          const SizedBox(width: DSSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: DSTypography.titleSmall.copyWith(color: scheme.onSurface, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(subtitle, style: DSTypography.bodySmall.copyWith(color: scheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+        ],
+      ),
+    );
+  }
 }

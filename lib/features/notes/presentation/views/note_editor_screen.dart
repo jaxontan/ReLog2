@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../app/design/design_system.dart';
 import '../../../memories/data/repositories/memory_repository.dart';
 import '../../../auth/presentation/view_models/auth_view_model.dart';
 import '../../../../core/error/failures.dart';
@@ -33,18 +34,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       };
 
   IconData get _phaseIcon => switch (widget.phase) {
-        'before' => Icons.edit_note,
-        'mid' => Icons.note_add,
-        'confession' => Icons.lock,
-        'after' => Icons.book,
-        _ => Icons.note,
+        'before' => Icons.edit_note_outlined,
+        'mid' => Icons.note_add_outlined,
+        'confession' => Icons.lock_outline,
+        'after' => Icons.book_outlined,
+        _ => Icons.note_outlined,
       };
 
   bool get _isConfession => widget.phase == 'confession';
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final scheme = context.scheme;
+
+    return DSPage(
       appBar: AppBar(
         title: Text(_phaseLabel),
         actions: [
@@ -52,47 +55,69 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             onPressed: _saving ? null : _save,
             child: _saving
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Save'),
+                : const Text('Save', style: TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(DSSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Phase header
             Row(
               children: [
-                Icon(_phaseIcon, color: Theme.of(context).colorScheme.primary),
-                const SizedBox(width: 8),
-                Text(_phaseLabel, style: Theme.of(context).textTheme.titleMedium),
+                Container(
+                  padding: const EdgeInsets.all(DSSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(DSRadius.md),
+                  ),
+                  child: Icon(_phaseIcon, color: scheme.onPrimaryContainer, size: DSIconSize.md),
+                ),
+                const SizedBox(width: DSSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_phaseLabel, style: DSTypography.titleMedium.copyWith(color: scheme.onSurface)),
+                      if (_isConfession)
+                        Text(
+                          'Revealed after trip ends',
+                          style: DSTypography.bodySmall.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                    ],
+                  ),
+                ),
                 if (_isConfession) ...[
-                  const SizedBox(width: 8),
-                  const Icon(Icons.lock, size: 16),
-                  const SizedBox(width: 4),
-                  const Text('Revealed after trip ends', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  const SizedBox(width: DSSpacing.sm),
+                  Icon(Icons.lock_outline, size: 16, color: scheme.onSurfaceVariant),
                 ],
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DSSpacing.lg),
+            // Editor
             Expanded(
               child: TextField(
                 controller: _bodyCtrl,
                 decoration: InputDecoration(
                   hintText: _hintForPhase(),
-                  border: const OutlineInputBorder(),
-                  contentPadding: const EdgeInsets.all(16),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(DSRadius.md)),
+                  contentPadding: const EdgeInsets.all(DSSpacing.lg),
+                  filled: true,
+                  fillColor: scheme.surfaceContainerHighest,
                 ),
                 expands: true,
                 maxLines: null,
                 textAlignVertical: TextAlignVertical.top,
+                style: DSTypography.bodyLarge,
               ),
             ),
             if (_isConfession) ...[
-              const SizedBox(height: 8),
-              const Text(
+              const SizedBox(height: DSSpacing.md),
+              Text(
                 'This note will be locked until the album creator ends the trip.',
-                style: TextStyle(fontSize: 11, color: Colors.grey),
+                style: DSTypography.bodySmall.copyWith(color: scheme.onSurfaceVariant),
               ),
             ],
           ],
