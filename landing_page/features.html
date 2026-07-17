@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReLog² - Features & Documentation</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Explore ReLog² features and developer documentation. Learn how to map group journeys, drop media pins, sync offline data, and configure time-locked vaults.">
+  
+  <!-- Font Integrations -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- GSAP Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bgLight: '#f6f5f3',
+            bgDark: '#0c0c0d',
+            cardLight: '#ffffff',
+            cardDark: '#121214',
+            textLight: '#141414',
+            textDark: '#f6f5f3',
+            textMutedLight: '#626260',
+            textMutedDark: '#a3a3a1',
+            accent: '#e65100',
+            accentHover: '#b33600',
+            borderLight: 'rgba(20, 20, 20, 0.06)',
+            borderDark: 'rgba(255, 255, 255, 0.08)',
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            sans: ['Manrope', 'sans-serif'],
+          },
+          borderRadius: {
+            btn: '32px',
+            card: '16px',
+            img: '20px',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/css">
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .doc-nav-active {
+      color: #e65100;
+      border-left-color: #e65100;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="bg-bgLight dark:bg-bgDark text-textLight dark:text-textDark font-sans antialiased overflow-x-hidden">
+
+  <!-- Sticky Top Navigation Bar -->
+  <nav class="fixed top-0 left-0 right-0 h-[76px] bg-bgLight/80 dark:bg-bgDark/80 backdrop-blur-md border-b border-borderLight dark:border-borderDark z-50 transition-all duration-300">
+    <div class="max-w-[1200px] mx-auto px-6 h-full flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="font-serif text-2xl font-semibold tracking-tight flex items-center gap-2">
+        <span class="logo-record-container flex items-center justify-center w-4 h-4 border-[2.5px] border-accent rounded-full">
+          <span class="logo-dot w-1.5 h-1.5 rounded-full bg-accent"></span>
+        </span>
+        <span>ReLog</span><span class="text-sm font-semibold opacity-70 transform -translate-y-1">2</span>
+      </a>
+
+      <!-- Desktop Links -->
+      <div class="hidden md:flex items-center gap-8 text-sm font-semibold text-textMutedLight dark:text-textMutedDark">
+        <a href="index.html" class="hover:text-accent transition-colors">Home</a>
+        <a href="#" class="text-accent transition-colors">Features</a>
+        <a href="pricing.html" class="hover:text-accent transition-colors">Pricing</a>
+        <a href="index.html#faq" class="hover:text-accent transition-colors">FAQ</a>
+      </div>
+
+      <!-- Right CTAs -->
+      <div class="flex items-center gap-4">
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle" class="p-2 border border-borderLight dark:border-borderDark rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors" aria-label="Toggle Theme">
+          <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+          </svg>
+          <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+        </button>
+
+        <a href="index.html#download" class="hidden sm:inline-block bg-accent hover:bg-accentHover text-white px-5 py-2 rounded-btn text-sm font-semibold transition-colors shadow-sm">
+          Get App
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Docs Hero -->
+  <header class="pt-36 pb-16 border-b border-borderLight dark:border-borderDark bg-cardLight/30 dark:bg-cardDark/30">
+    <div class="max-w-[1200px] mx-auto px-6 text-left">
+      <div class="text-xs font-bold uppercase tracking-widest text-accent mb-3">Product Manual & Specs</div>
+      <h1 class="font-serif text-4xl md:text-5xl font-normal leading-tight tracking-tight">
+        Features & Documentation
+      </h1>
+      <p class="text-textMutedLight dark:text-textMutedDark text-sm md:text-base mt-4 max-w-xl leading-relaxed">
+        Deep dive into the architecture, configuration parameters, and user capabilities powering the ReLog² collaborative mapping experience.
+      </p>
+    </div>
+  </header>
+
+  <!-- Main Grid Page -->
+  <main class="max-w-[1200px] mx-auto px-6 py-20">
+    <div class="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-16">
+      
+      <!-- Side navigation -->
+      <aside class="hidden lg:block relative">
+        <div class="sticky top-28 flex flex-col gap-6 text-sm text-textMutedLight dark:text-textMutedDark">
+          
+          <div class="flex flex-col gap-2">
+            <div class="text-xs font-bold uppercase tracking-wider text-textLight dark:text-textDark/80 mb-2">Core Features</div>
+            <a href="#features-live-map" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Shared Route Map</a>
+            <a href="#features-cascade" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Polaroid Cascade</a>
+            <a href="#features-echo" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Echo Trails</a>
+            <a href="#features-confessions" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Confession Vaults</a>
+            <a href="#features-scratch" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Scratch Cover Canvas</a>
+            <a href="#features-flip" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">3D Page Flipping Engine</a>
+            <a href="#features-synth" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Web Audio Synth Engine</a>
+            <a href="#features-lens" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Expanding Lens Preloader</a>
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <div class="text-xs font-bold uppercase tracking-wider text-textLight dark:text-textDark/80 mb-2">User Guides</div>
+            <a href="#guide-codes" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Invite Group Codes</a>
+            <a href="#guide-offline" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Offline Sync Mode</a>
+            <a href="#guide-export" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">Printable Book Export</a>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <div class="text-xs font-bold uppercase tracking-wider text-textLight dark:text-textDark/80 mb-2">Technical Reference</div>
+            <a href="#ref-api" class="border-l-2 border-transparent pl-3 hover:text-accent transition-colors">API & Specs</a>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Main content panel -->
+      <div class="flex flex-col gap-24">
+        
+        <!-- SECTION 1: CORE FEATURES -->
+        <section class="flex flex-col gap-12">
+          <div class="border-b border-borderLight dark:border-borderDark pb-4">
+            <h2 class="font-serif text-2xl md:text-3xl font-normal text-accent">Core Features Explained</h2>
+          </div>
+
+          <!-- Feature 1: Shared Route Map -->
+          <div id="features-live-map" class="reveal scroll-mt-24 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-8 bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-8 rounded-card hover:border-accent/20 transition-all duration-300">
+            <div>
+              <h3 class="font-serif text-xl font-bold mb-3">1. Collaborative Route Mapping</h3>
+              <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+                As your group travels, ReLog² coordinates GPS location pins on a shared, dynamic timeline. Instead of static disconnected snapshots, your journey compiles into an interactive trail mapped directly onto geographical paths.
+              </p>
+              <ul class="mt-4 flex flex-col gap-2 text-xs text-textMutedLight dark:text-textMutedDark">
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Real-time coordinates sharing with group encryption keys</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Automatic bezier curving algorithm mapping roads</li>
+              </ul>
+            </div>
+            <div class="bg-bgLight dark:bg-bgDark border border-borderLight dark:border-borderDark rounded-md flex items-center justify-center p-4">
+              <svg class="w-full h-32" viewBox="0 0 160 120">
+                <path d="M 20 100 Q 60 20 100 80 T 140 40" fill="none" stroke="#e65100" stroke-width="3.5" stroke-linecap="round"></path>
+                <circle cx="20" cy="100" r="5" fill="#ffffff" stroke="#e65100" stroke-width="2"></circle>
+                <circle cx="68" cy="48" r="5" fill="#ffffff" stroke="#e65100" stroke-width="2"></circle>
+                <circle cx="140" cy="40" r="5" fill="#ffffff" stroke="#e65100" stroke-width="2"></circle>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Feature 2: Polaroid Cascade -->
+          <div id="features-cascade" class="reveal scroll-mt-24 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-8 bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-8 rounded-card hover:border-accent/20 transition-all duration-300">
+            <div>
+              <h3 class="font-serif text-xl font-bold mb-3">2. Polaroid Cascade Rain</h3>
+              <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+                Watch group uploads settle directly onto their coordinates in real time. The Polaroid Cascade stacks captures sequentially, giving an organic collage representation of active memories that lets group partners immediately see what others uploaded.
+              </p>
+              <ul class="mt-4 flex flex-col gap-2 text-xs text-textMutedLight dark:text-textMutedDark">
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Staggered physics-based entry animations</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Dynamic stacking logic avoiding overlapping pin occlusion</li>
+              </ul>
+            </div>
+            <div class="bg-bgLight dark:bg-bgDark border border-borderLight dark:border-borderDark rounded-md flex flex-col justify-around p-4 relative overflow-hidden h-32">
+              <div class="w-20 bg-white p-1 pb-3 shadow-md rounded-xs border border-neutral-300 transform -rotate-12 absolute left-6 top-4 scale-90">
+                <div class="w-full aspect-square bg-neutral-300"></div>
+              </div>
+              <div class="w-20 bg-white p-1 pb-3 shadow-md rounded-xs border border-neutral-300 transform rotate-12 absolute right-6 bottom-4 scale-90">
+                <div class="w-full aspect-square bg-neutral-400"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 3: Echo Trails -->
+          <div id="features-echo" class="reveal scroll-mt-24 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-8 bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-8 rounded-card hover:border-accent/20 transition-all duration-300">
+            <div>
+              <h3 class="font-serif text-xl font-bold mb-3">3. The Echo Trail Soundscapes</h3>
+              <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+                Rather than relying solely on visual maps, the Echo Trail converts nodes into audio hotspots. Group partners drop raw ambient voice recordings, emitting pulsing soundwaves that travel across coordinates. When waves intersect, they flag shared moments.
+              </p>
+              <ul class="mt-4 flex flex-col gap-2 text-xs text-textMutedLight dark:text-textMutedDark">
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Audio amplitude mapped to canvas ripple radii</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Multi-node chime generation based on coordinate closeness</li>
+              </ul>
+            </div>
+            <div class="bg-bgLight dark:bg-bgDark border border-borderLight dark:border-borderDark rounded-md flex items-center justify-center p-4">
+              <svg class="w-full h-32" viewBox="0 0 160 120">
+                <circle cx="80" cy="60" r="15" fill="none" stroke="#e65100" stroke-width="1" opacity="0.3"></circle>
+                <circle cx="80" cy="60" r="30" fill="none" stroke="#e65100" stroke-width="1.5" opacity="0.6" stroke-dasharray="2,2"></circle>
+                <circle cx="80" cy="60" r="45" fill="none" stroke="#e65100" stroke-width="1" opacity="0.9"></circle>
+                <circle cx="80" cy="60" r="4" fill="#e65100"></circle>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Feature 4: Confession Vaults -->
+          <div id="features-confessions" class="reveal scroll-mt-24 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-8 bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-8 rounded-card hover:border-accent/20 transition-all duration-300">
+            <div>
+              <h3 class="font-serif text-xl font-bold mb-3">4. Time-Locked Confession Vaults</h3>
+              <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+                Add private thoughts or anonymous trip feedback in encrypted time vaults during the trip. Secrets remain locked from other group members and are only revealed automatically once the album creator ends the trip.
+              </p>
+              <ul class="mt-4 flex flex-col gap-2 text-xs text-textMutedLight dark:text-textMutedDark">
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Cryptographic locks tied to target time and status variables</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> End-of-trip decryption triggers</li>
+              </ul>
+            </div>
+            <div class="bg-bgLight dark:bg-bgDark border border-borderLight dark:border-borderDark rounded-md flex items-center justify-center p-4">
+              <svg class="w-12 h-12 text-accent animate-pulse" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Feature 5: Scratch Cover Canvas -->
+          <div id="features-scratch" class="reveal scroll-mt-24 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-8 bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-8 rounded-card hover:border-accent/20 transition-all duration-300">
+            <div>
+              <h3 class="font-serif text-xl font-bold mb-3">5. HTML5 Scratch-to-Reveal Canvas</h3>
+              <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+                The interactive forgotten book sits covered in a simulated layer of dust. By dragging cursors or fingers, users scrape away dust particles, raising the underlying gold title text opacity dynamically from 20% to 100% on threshold clearance.
+              </p>
+              <ul class="mt-4 flex flex-col gap-2 text-xs text-textMutedLight dark:text-textMutedDark">
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Canvas pixel density scanning for transparency coverage</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Responsive layout redrawing keeping dust states stable</li>
+              </ul>
+            </div>
+            <div class="bg-bgLight dark:bg-bgDark border border-borderLight dark:border-borderDark rounded-md flex items-center justify-center p-4">
+              <svg class="w-12 h-12 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122l9.37-9.37a2.25 2.25 0 113.182 3.182l-9.37 9.371a6 6 0 01-1.897 1.285l-4.085 1.634a.626.626 0 01-.782-.782l1.634-4.085a6 6 0 011.285-1.897z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.5 7L17 12.5"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Feature 6: 3D Page Flipping Engine -->
+          <div id="features-flip" class="reveal scroll-mt-24 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-8 bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-8 rounded-card hover:border-accent/20 transition-all duration-300">
+            <div>
+              <h3 class="font-serif text-xl font-bold mb-3">6. 3D Double-Sided Page Flipping Engine</h3>
+              <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+                Pages inside the travelogue operate as double-sided 3D sheets. Clicking pages flips them around a left-anchored spine pivot using CSS 3D transforms (`preserve-3d`), automatically swapping visible content sides based on rotation angles.
+              </p>
+              <ul class="mt-4 flex flex-col gap-2 text-xs text-textMutedLight dark:text-textMutedDark">
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Backface-visibility hiding for seamless text swapping</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Anchored left spine pivot (`transform-origin: left`)</li>
+              </ul>
+            </div>
+            <div class="bg-bgLight dark:bg-bgDark border border-borderLight dark:border-borderDark rounded-md flex items-center justify-center p-4">
+              <svg class="w-12 h-12 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-16.5a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-16.5v16.5"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Feature 7: Web Audio Synth Engine -->
+          <div id="features-synth" class="reveal scroll-mt-24 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-8 bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-8 rounded-card hover:border-accent/20 transition-all duration-300">
+            <div>
+              <h3 class="font-serif text-xl font-bold mb-3">7. Web Audio API Synthesizer</h3>
+              <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+                Rather than loading massive audio assets, the app features a synthesized Web Audio chime engine. Interactive nodes generate sine-wave audio signals with custom envelope parameters (attack, decay, release) to play musical frequencies.
+              </p>
+              <ul class="mt-4 flex flex-col gap-2 text-xs text-textMutedLight dark:text-textMutedDark">
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> AudioContext oscillators running natively in browsers</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Dynamic gain-node envelopes preventing audio popping</li>
+              </ul>
+            </div>
+            <div class="bg-bgLight dark:bg-bgDark border border-borderLight dark:border-borderDark rounded-md flex items-center justify-center p-4">
+              <svg class="w-12 h-12 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Feature 8: Expanding Lens Preloader -->
+          <div id="features-lens" class="reveal scroll-mt-24 grid grid-cols-1 md:grid-cols-[1fr_240px] gap-8 bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-8 rounded-card hover:border-accent/20 transition-all duration-300">
+            <div>
+              <h3 class="font-serif text-xl font-bold mb-3">8. Expanding Shutter Preloader</h3>
+              <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+                Site entry is locked behind a dark camera-record overlay. Clicking the red dot triggers a native GSAP animation that scales up the preloader shutter 60x, revealing the landing page beneath in a stylized expanding camera lens transition.
+              </p>
+              <ul class="mt-4 flex flex-col gap-2 text-xs text-textMutedLight dark:text-textMutedDark">
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Synchronized body scroll unlock on preloader fade</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Hardware-accelerated GSAP scale and visibility timelines</li>
+              </ul>
+            </div>
+            <div class="bg-bgLight dark:bg-bgDark border border-borderLight dark:border-borderDark rounded-md flex items-center justify-center p-4">
+              <svg class="w-12 h-12 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9"></circle>
+                <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+              </svg>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: USER GUIDES -->
+        <section class="flex flex-col gap-12">
+          <div class="border-b border-borderLight dark:border-borderDark pb-4">
+            <h2 class="font-serif text-2xl md:text-3xl font-normal text-accent">User & Setup Guides</h2>
+          </div>
+
+          <!-- Guide: Codes -->
+          <div id="guide-codes" class="reveal scroll-mt-24 flex flex-col gap-4">
+            <h3 class="font-serif text-xl font-bold">1. Joining via 6-Digit Room Codes</h3>
+            <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+              ReLog² makes setting up collaborative albums instant. The trip coordinator generates a unique 6-digit invite code. Share this token with travel partners to connect their apps immediately without complex login routines.
+            </p>
+            <div class="flex gap-3 bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-4 rounded-md w-fit font-mono font-bold text-accent text-lg">
+              <span>R</span><span>E</span><span>L</span><span>4</span><span>O</span><span>G</span>
+            </div>
+          </div>
+
+          <!-- Guide: Offline Mode -->
+          <div id="guide-offline" class="reveal scroll-mt-24 flex flex-col gap-4">
+            <h3 class="font-serif text-xl font-bold">2. Off-The-Grid Offline Buffering</h3>
+            <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+              When hiking or traveling through regions with weak cellular connectivity, the app caches GPS data, photos, and voice notes locally in the sandbox storage. Once connection is re-established, the cache automatically uploads in the background.
+            </p>
+          </div>
+
+          <!-- Guide: Print Export -->
+          <div id="guide-export" class="reveal scroll-mt-24 flex flex-col gap-4">
+            <h3 class="font-serif text-xl font-bold">3. Printable Layout Book Export</h3>
+            <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+              At the end of your trip, click "Export Layout Book" in the album dashboard. ReLog² compiles the route trace, coordinates, photos, and decrypted group confessions into a beautifully formatted PDF book ready to be printed or archived.
+            </p>
+          </div>
+        </section>
+
+        <!-- SECTION 3: TECHNICAL REFERENCE -->
+        <section id="ref-api" class="reveal scroll-mt-24 flex flex-col gap-8 pb-20">
+          <div class="border-b border-borderLight dark:border-borderDark pb-4">
+            <h2 class="font-serif text-2xl md:text-3xl font-normal text-accent">Technical Reference & Config</h2>
+          </div>
+
+          <p class="text-sm text-textMutedLight dark:text-textMutedDark leading-relaxed">
+            ReLog² uses simple metadata JSON models to exchange trip data. Coordinate payloads follow standard structure definitions:
+          </p>
+
+          <pre class="bg-cardLight dark:bg-cardDark border border-borderLight dark:border-borderDark p-6 rounded-md text-xs font-mono text-[#e65100] overflow-x-auto">
+{
+  "album_id": "cap-90421",
+  "members_max": 20,
+  "images_max": 500,
+  "route_coordinates": [
+    { "lat": 43.7102, "lng": 7.2620, "label": "Nizza Beach" },
+    { "lat": 43.5518, "lng": 7.0173, "label": "Cannes Port" }
+  ],
+  "confessions_locked": true
+}</pre>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Section -->
+  <footer class="py-12 border-t border-borderLight dark:border-borderDark text-xs text-textMutedLight dark:text-textMutedDark">
+    <div class="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-6">
+      
+      <div class="font-serif text-lg font-semibold text-textLight dark:text-textDark flex items-center gap-1.5">
+        <span class="flex items-center justify-center w-3.5 h-3.5 border-2 border-accent rounded-full">
+          <span class="logo-dot w-1.5 h-1.5 rounded-full bg-accent"></span>
+        </span>
+        ReLog<span class="text-[10px] transform -translate-y-1">2</span>
+      </div>
+      
+      <div class="flex gap-8">
+        <a href="index.html" class="hover:text-accent transition-colors">Home</a>
+        <a href="#" class="hover:text-accent transition-colors">Features</a>
+        <a href="pricing.html" class="hover:text-accent transition-colors">Pricing</a>
+        <a href="index.html#faq" class="hover:text-accent transition-colors">FAQ</a>
+      </div>
+      
+      <div>
+        &copy; 2026 ReLog. Built for travelers.
+      </div>
+      
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      // Theme Switcher Logic
+      const toggleBtn = document.getElementById('theme-toggle');
+      const htmlEl = document.documentElement;
+      
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        htmlEl.classList.add('dark');
+      } else {
+        htmlEl.classList.remove('dark');
+      }
+      
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          if (htmlEl.classList.contains('dark')) {
+            htmlEl.classList.remove('dark');
+            localStorage.theme = 'light';
+          } else {
+            htmlEl.classList.add('dark');
+            localStorage.theme = 'dark';
+          }
+        });
+      }
+
+      // IntersectionObserver Scroll Reveals
+      const revealElements = document.querySelectorAll('.reveal');
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      revealElements.forEach(el => revealObserver.observe(el));
+
+      // Sidebar link highlights on scroll
+      const sections = document.querySelectorAll('section [id], main [id]');
+      const navLinks = document.querySelectorAll('aside a');
+
+      window.addEventListener('scroll', () => {
+        let currentActive = "";
+        sections.forEach(sec => {
+          const top = sec.offsetTop - 140;
+          if (window.scrollY >= top) {
+            currentActive = sec.getAttribute('id');
+          }
+        });
+
+        navLinks.forEach(link => {
+          link.classList.remove('doc-nav-active');
+          if (link.getAttribute('href') === `#${currentActive}`) {
+            link.classList.add('doc-nav-active');
+          }
+        });
+      });
+
+    });
+  </script>
+</body>
+</html>

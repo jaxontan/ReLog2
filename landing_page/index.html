@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReLog² - Shared Trip Mapping & Group Travel Albums</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="ReLog² is a shared travel album for group trips. Capture photos, videos, and time-locked confession logs mapped dynamically along your route.">
+  <meta property="og:title" content="ReLog² - Shared Group Travel Mapping">
+  <meta property="og:description" content="Capture photos, videos, and time-locked confession logs mapped dynamically along your route.">
+  <meta property="og:type" content="website">
+  
+  <!-- Font Integrations -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- GSAP Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bgLight: '#f6f5f3',
+            bgDark: '#0c0c0d',
+            cardLight: '#ffffff',
+            cardDark: '#121214',
+            textLight: '#141414',
+            textDark: '#f6f5f3',
+            textMutedLight: '#626260',
+            textMutedDark: '#a3a3a1',
+            accent: '#e65100',
+            accentHover: '#b33600',
+            borderLight: 'rgba(20, 20, 20, 0.06)',
+            borderDark: 'rgba(255, 255, 255, 0.08)',
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            sans: ['Manrope', 'sans-serif'],
+          },
+          borderRadius: {
+            btn: '32px',
+            card: '16px',
+            img: '20px',
+          },
+          animation: {
+            'pulse-glow': 'pulse-glow 2.2s ease-in-out infinite',
+            'float-slow': 'float-slow 7s ease-in-out infinite',
+            'float-slower': 'float-slower 9s ease-in-out infinite',
+            'logo-pulse': 'logo-pulse 2s ease-in-out infinite',
+          },
+          keyframes: {
+            'pulse-glow': {
+              '0%, 100%': { boxShadow: '0 0 30px rgba(230, 81, 0, 0.2)' },
+              '50%': { boxShadow: '0 0 55px rgba(230, 81, 0, 0.55)' },
+            },
+            'float-slow': {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-12px)' },
+            },
+            'float-slower': {
+              '0%, 100%': { transform: 'translateY(0px) rotate(-6deg)' },
+              '50%': { transform: 'translateY(-18px) rotate(-4deg)' },
+            },
+            'logo-pulse': {
+              '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+              '50%': { transform: 'scale(1.25)', opacity: '0.7' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/css">
+    /* Reveal transitions */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Confession card lock shake keyframes */
+    @keyframes lock-shake {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-8deg); }
+      40% { transform: rotate(8deg); }
+      60% { transform: rotate(-4deg); }
+      80% { transform: rotate(4deg); }
+    }
+    .confession-card:hover .lock-icon {
+      animation: lock-shake 0.6s ease-in-out;
+    }
+
+    /* Polaroid Cascade hover lift effect */
+    .cascade-card {
+      transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .cascade-card:hover {
+      transform: scale(1.16) translateY(-14px) rotate(0deg) !important;
+      box-shadow: 0 25px 40px rgba(230, 81, 0, 0.3);
+      border-color: #e65100;
+      z-index: 50;
+    }
+
+    /* 3D Book Layout styles */
+    .book-perspective {
+      perspective: 1200px;
+    }
+    .book-3d {
+      transform-style: preserve-3d;
+      transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .book-cover {
+      transform-style: preserve-3d;
+      transform-origin: left center;
+      transition: transform 1.4s cubic-bezier(0.645, 0.045, 0.355, 1);
+      z-index: 30;
+    }
+    .book-cover.open {
+      transform: rotateY(-178deg);
+    }
+    .book-page {
+      transform-origin: left center;
+      transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+      backface-visibility: hidden;
+      z-index: 5;
+    }
+    .book-page.flipped {
+      transform: rotateY(-135deg);
+    }
+    .book-page-double {
+      transform-origin: left center;
+      transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+      transform-style: preserve-3d;
+      z-index: 5;
+    }
+    .book-page-double.flipped {
+      transform: rotateY(-135deg);
+    }
+    .page-side {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 4px;
+      padding: 16px;
+      background: #efece6;
+      color: black;
+      box-shadow: inset 3px 0 10px rgba(0,0,0,0.05);
+    }
+    .page-side-front {
+      z-index: 2;
+    }
+    .page-side-back {
+      transform: rotateY(180deg);
+      z-index: 1;
+      border-right: 1px solid rgba(0,0,0,0.15);
+    }
+    .book-cover-back {
+      transform: translateZ(-2px);
+    }
+
+    /* Candle flicker animation */
+    @keyframes candle-flicker {
+      0%, 100% { opacity: 0.95; filter: brightness(1); }
+      50% { opacity: 0.85; filter: brightness(0.9); }
+      75% { opacity: 1.0; filter: brightness(1.05); }
+    }
+    .candle-lighting {
+      animation: candle-flicker 5s ease-in-out infinite;
+    }
+
+    /* Ink pulse marker */
+    @keyframes ink-pulse {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 0.3; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+    .pulse-marker::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 2px solid #e65100;
+      border-radius: 50%;
+      animation: ink-pulse 2s ease-in-out infinite;
+      top: -6px;
+      left: -6px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-bgLight dark:bg-bgDark text-textLight dark:text-textDark font-sans antialiased overflow-x-hidden" style="overflow: hidden; height: 100vh;">
+
+  <!-- Preloader Overlay -->
+  <div id="preloader" class="fixed inset-0 bg-[#0c0c0d] flex flex-col items-center justify-center z-[99999] overflow-hidden">
+    <div id="preloader-btn" class="flex items-center justify-center w-24 h-24 border-4 border-accent rounded-full cursor-pointer animate-pulse-glow bg-transparent hover:border-[#ff6b00] transition-colors duration-300">
+      <div id="preloader-dot" class="w-12 h-12 rounded-full bg-accent hover:bg-[#ff6b00] transition-colors duration-300"></div>
+    </div>
+    <div id="preloader-text" class="mt-7 text-xs font-bold uppercase tracking-[2px] text-white opacity-80 font-sans">
+      Press Record to Start
+    </div>
+  </div>
+
+  <!-- Sticky Top Navigation Bar -->
+  <nav class="fixed top-0 left-0 right-0 h-[76px] bg-bgLight/80 dark:bg-bgDark/80 backdrop-blur-md border-b border-borderLight dark:border-borderDark z-50 transition-all duration-300">
+    <div class="max-w-[1200px] mx-auto px-6 h-full flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#" id="navbar-logo" class="font-serif text-2xl font-semibold tracking-tight flex items-center gap-2">
+        <span class="logo-record-container flex items-center justify-center w-4 h-4 border-[2.5px] border-accent rounded-full">
+          <span class="logo-dot w-1.5 h-1.5 rounded-full bg-accent animate-logo-pulse"></span>
+        </span>
+        <span class="logo-text-chars inline-block">ReLog</span><span class="logo-text-sup text-sm font-semibold opacity-70 transform -translate-y-1">2</span>
+      </a>
+
+      <!-- Desktop Links -->
+      <div class="hidden md:flex items-center gap-8 text-sm font-semibold text-textMutedLight dark:text-textMutedDark">
+        <a href="#" class="hover:text-accent transition-colors">Home</a>
+        <a href="features.html" class="hover:text-accent transition-colors">Features</a>
+        <a href="pricing.html" class="hover:text-accent transition-colors">Pricing</a>
+        <a href="#faq" class="hover:text-accent transition-colors">FAQ</a>
+      </div>
+
+      <!-- Right CTAs -->
+      <div class="flex items-center gap-4">
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle" class="p-2 border border-borderLight dark:border-borderDark rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors" aria-label="Toggle Theme">
+          <!-- Light Mode Icon (Sun) -->
+          <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+          </svg>
+          <!-- Dark Mode Icon (Moon) -->
+          <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+        </button>
+
+        <a href="#download" class="hidden sm:inline-block bg-accent hover:bg-accentHover text-white px-5 py-2 rounded-btn text-sm font-semibold transition-colors shadow-sm">
+          Get App
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="pt-40 pb-24 overflow-hidden relative">
+    <div class="max-w-[1200px] mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
+        
+        <!-- Left Hero Copy -->
+        <div class="reveal flex flex-col gap-6 text-left">
+          <div class="text-xs font-bold uppercase tracking-widest text-accent">
+            Shared Trip Mapping
+          </div>
+          
+          <h1 class="font-serif text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.15] tracking-tight">
+            Every memory is a map pin.<br>
+            <span class="italic text-accent">Capture together, replay forever.</span>
+          </h1>
+          
+          <p class="text-lg text-textMutedLight dark:text-textMutedDark max-w-[480px]">
+            A shared travel album for group trips. Capture photos, videos, and time-locked notes mapped dynamically along your travel route.
+          </p>
+          
+          <div class="flex flex-wrap gap-4 mt-2">
+            <a href="#download" class="bg-accent hover:bg-accentHover text-white px-7 py-3.5 rounded-btn font-semibold text-base inline-flex items-center gap-2 transition-all hover:-translate-y-0.5 shadow-sm">
+              Start Your First Album
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="#features" class="border border-borderLight dark:border-borderDark hover:bg-black/5 dark:hover:bg-white/5 text-textLight dark:text-textDark px-7 py-3.5 rounded-btn font-semibold text-base transition-all hover:-translate-y-0.5">
+              How it works
+            </a>
+          </div>
+        </div>
+        
+        <!-- Right Hero Mockups (Floating Visual Layer) -->
+        <div class="reveal reveal-delay-1 relative flex justify-center items-center mt-8 lg:mt-0">
+          <!-- Primary Map Mockup Wrapper -->
+          <div class="hero-map-mockup relative w-full max-w-[380px] aspect-[4/5] rounded-img overflow-hidden border-8 border-white dark:border-cardDark bg-white dark:bg-cardDark shadow-2xl transition-all duration-300">
+            <img src="images/map_ui.png" alt="ReLog interactive travel map mockup" class="w-full h-full object-cover">
+          </div>
+          <!-- Secondary Overlapping Album Mockup -->
+          <div class="reveal reveal-delay-2 hero-album-mockup absolute -bottom-6 -left-8 w-44 aspect-square rounded-card overflow-hidden border-6 border-white dark:border-cardDark bg-white dark:bg-cardDark shadow-lg transition-all duration-300">
+            <img src="images/album_ui.png" alt="ReLog shared album mockup detail" class="w-full h-full object-cover">
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Stats Grid / Social Hook -->
+  <section id="stats-section" class="py-16 bg-cardLight dark:bg-cardDark border-y border-borderLight dark:border-borderDark overflow-hidden">
+    <div class="max-w-[1200px] mx-auto px-6">
+      <div id="stats-row" class="w-full flex justify-center">
+        <div id="stats-track" class="flex flex-col sm:flex-row gap-12 sm:gap-24 text-center items-center justify-center">
+          
+          <div class="reveal flex flex-col items-center min-w-[200px]">
+            <div class="stat-number font-serif text-4xl md:text-5xl text-accent font-normal mb-2" data-target="1" data-suffix="st">1st</div>
+            <div class="text-xs font-bold uppercase tracking-wider text-textMutedLight dark:text-textMutedDark">Trip - Always Free to Start</div>
+          </div>
+          
+          <div class="reveal reveal-delay-1 flex flex-col items-center min-w-[200px]">
+            <div class="stat-number font-serif text-4xl md:text-5xl text-accent font-normal mb-2" data-target="20" data-suffix="">20</div>
+            <div class="text-xs font-bold uppercase tracking-wider text-textMutedLight dark:text-textMutedDark">Members - Maximum Group Size</div>
+          </div>
+          
+          <div class="reveal reveal-delay-2 flex flex-col items-center min-w-[200px]">
+            <div class="stat-number font-serif text-4xl md:text-5xl text-accent font-normal mb-2" data-target="100" data-suffix="%">100%</div>
+            <div class="text-xs font-bold uppercase tracking-wider text-textMutedLight dark:text-textMutedDark">Private & Encrypted</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Polaroid Cascade Section -->
+  <section id="cascade-section" class="reveal" style="padding: 96px 0; background-color: #0c0c0d; color: #ffffff; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.06); overflow: hidden; transition: opacity 0.4s ease, transform 0.4s ease;">
+    <div class="max-w-[1200px] mx-auto px-6 flex flex-col items-center gap-6">
+      
+      <div class="text-xs font-bold uppercase tracking-widest text-accent">
+        Real-Time Cascade
+      </div>
+      
+      <h2 class="font-serif text-3xl md:text-4xl font-normal max-w-[600px] leading-tight">
+        Memories rain down.<br>
+        <span class="italic text-accent">Assembling your story in real-time.</span>
+      </h2>
+      
+      <p class="text-sm text-[#a3a3a1] max-w-[460px] leading-relaxed">
+        Watch as group photos, audio clips, and map locations fall onto the shared trip route, building a beautiful memory collage.
+      </p>
+
+      <!-- Cascade Viewport Frame -->
+      <div class="w-full max-w-[800px] h-[360px] border border-white/10 rounded-card bg-[#09090a] overflow-hidden mt-8 relative select-none">
+        <!-- Abstract dashed route in background -->
+        <svg class="absolute w-full h-full inset-0 pointer-events-none" viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 100 240 Q 250 80 400 240 T 700 120" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="3" stroke-dasharray="6,6"></path>
+          
+          <!-- Route connections shown in gold behind cards -->
+          <path d="M 100 240 Q 250 80 400 240 T 700 120" fill="none" stroke="#e65100" stroke-width="3.5" opacity="0.35" id="activeRoutePath" style="stroke-dasharray: 1000; stroke-dashoffset: 1000;"></path>
+        </svg>
+
+        <!-- Polaroid Memory Cards Area -->
+        <div id="cascade-cards-container" class="absolute inset-0">
+          <!-- Card 1 -->
+          <div class="cascade-card-wrapper absolute" style="left: 100px; top: 240px; transform: translate(-50%, -50%);">
+            <div class="cascade-card opacity-0 bg-white dark:bg-cardDark p-2 pb-5 shadow-2xl border border-borderLight dark:border-borderDark rounded-sm w-28 md:w-32 cursor-pointer">
+              <div class="w-full aspect-square bg-neutral-200 dark:bg-neutral-800 overflow-hidden rounded-xs relative">
+                <img src="images/album_ui.png" class="w-full h-full object-cover">
+                <div class="absolute bottom-1 right-1 bg-accent text-white p-1 rounded-full text-[8px] font-bold">
+                  ♫
+                </div>
+              </div>
+              <div class="mt-2 text-center">
+                <div class="text-[8px] font-bold text-textLight dark:text-textDark font-sans">Paris - 10:42</div>
+                <div class="text-[5px] text-textMutedLight dark:text-textMutedDark uppercase tracking-wider font-semibold">Voice Pin</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="cascade-card-wrapper absolute" style="left: 220px; top: 120px; transform: translate(-50%, -50%);">
+            <div class="cascade-card opacity-0 bg-white dark:bg-cardDark p-2 pb-5 shadow-2xl border border-borderLight dark:border-borderDark rounded-sm w-28 md:w-32 cursor-pointer">
+              <div class="w-full aspect-square bg-neutral-200 dark:bg-neutral-800 overflow-hidden rounded-xs relative">
+                <img src="images/map_ui.png" class="w-full h-full object-cover">
+              </div>
+              <div class="mt-2 text-center">
+                <div class="text-[8px] font-bold text-textLight dark:text-textDark font-sans">Eiffel - 14:15</div>
+                <div class="text-[5px] text-textMutedLight dark:text-textMutedDark uppercase tracking-wider font-semibold">Photo Pin</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="cascade-card-wrapper absolute" style="left: 400px; top: 240px; transform: translate(-50%, -50%);">
+            <div class="cascade-card opacity-0 bg-white dark:bg-cardDark p-2 pb-5 shadow-2xl border border-borderLight dark:border-borderDark rounded-sm w-28 md:w-32 cursor-pointer">
+              <div class="w-full aspect-square bg-neutral-200 dark:bg-neutral-800 overflow-hidden rounded-xs relative">
+                <img src="images/album_ui.png" class="w-full h-full object-cover">
+              </div>
+              <div class="mt-2 text-center">
+                <div class="text-[8px] font-bold text-textLight dark:text-textDark font-sans">Louvre - 18:30</div>
+                <div class="text-[5px] text-textMutedLight dark:text-textMutedDark uppercase tracking-wider font-semibold">Photo Pin</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="cascade-card-wrapper absolute" style="left: 550px; top: 150px; transform: translate(-50%, -50%);">
+            <div class="cascade-card opacity-0 bg-white dark:bg-cardDark p-2 pb-5 shadow-2xl border border-borderLight dark:border-borderDark rounded-sm w-28 md:w-32 cursor-pointer">
+              <div class="w-full aspect-square bg-neutral-200 dark:bg-neutral-800 overflow-hidden rounded-xs relative">
+                <img src="images/map_ui.png" class="w-full h-full object-cover">
+                <div class="absolute bottom-1 right-1 bg-accent text-white p-1 rounded-full text-[8px] font-bold">
+                  ♫
+                </div>
+              </div>
+              <div class="mt-2 text-center">
+                <div class="text-[8px] font-bold text-textLight dark:text-textDark font-sans">Seine - 21:05</div>
+                <div class="text-[5px] text-textMutedLight dark:text-textMutedDark uppercase tracking-wider font-semibold">Voice Pin</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5 -->
+          <div class="cascade-card-wrapper absolute" style="left: 700px; top: 120px; transform: translate(-50%, -50%);">
+            <div class="cascade-card opacity-0 bg-white dark:bg-cardDark p-2 pb-5 shadow-2xl border border-borderLight dark:border-borderDark rounded-sm w-28 md:w-32 cursor-pointer">
+              <div class="w-full aspect-square bg-neutral-200 dark:bg-neutral-800 overflow-hidden rounded-xs relative">
+                <img src="images/album_ui.png" class="w-full h-full object-cover">
+              </div>
+              <div class="mt-2 text-center">
+                <div class="text-[8px] font-bold text-textLight dark:text-textDark font-sans">Hotel - 23:45</div>
+                <div class="text-[5px] text-textMutedLight dark:text-textMutedDark uppercase tracking-wider font-semibold">Note Pin</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Replay Button Overlay -->
+        <button id="btn-cascade-replay" class="absolute bottom-4 right-4 px-4 py-2 border border-white/10 hover:bg-white/5 rounded-full text-[10px] uppercase font-bold tracking-wider transition-colors z-20 text-white">
+          Replay Drop
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Features Layout (Alternating Asymmetric Rows) -->
+  <section id="features" class="py-28">
+    <div class="max-w-[1200px] mx-auto px-6 flex flex-col gap-24">
+      
+      <!-- Feature Row 1 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <!-- Feature Copy -->
+        <div class="reveal flex flex-col gap-5">
+          <div class="text-xs font-bold uppercase tracking-widest text-accent">
+            Live Streaming
+          </div>
+          <h2 class="font-serif text-3xl md:text-4xl font-normal leading-tight">
+            See pins appear as friends explore.
+          </h2>
+          <p class="text-textMutedLight dark:text-textMutedDark">
+            Every photo, video, or sound log taken by a trip member is instantly pinned to your shared interactive route map. Share travel moments as they happen without group chats.
+          </p>
+        </div>
+        <!-- Feature Image Mockup -->
+        <div class="reveal reveal-delay-1 feature-img-col rounded-img overflow-hidden border border-borderLight dark:border-borderDark shadow-lg cursor-pointer">
+          <img src="images/map_ui.png" alt="ReLog live route pin map" class="w-full max-h-[420px] object-cover transition-transform duration-500">
+        </div>
+      </div>
+
+      <!-- Feature Row 2 (Reverse Layout) -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <!-- Feature Image Mockup (Appears left on desktop) -->
+        <div class="reveal reveal-delay-1 order-2 lg:order-1 feature-img-col rounded-img overflow-hidden border border-borderLight dark:border-borderDark shadow-lg cursor-pointer">
+          <img src="images/album_ui.png" alt="ReLog shared live photo stream" class="w-full max-h-[420px] object-cover transition-transform duration-500">
+        </div>
+        <!-- Feature Copy (Appears right on desktop) -->
+        <div class="reveal order-1 lg:order-2 flex flex-col gap-5">
+          <div class="text-xs font-bold uppercase tracking-widest text-accent">
+            Sound Capture
+          </div>
+          <h2 class="font-serif text-3xl md:text-4xl font-normal leading-tight">
+            Pins with a voice. Capture details.
+          </h2>
+          <p class="text-textMutedLight dark:text-textMutedDark">
+            Photos show how a place looked. Sounds capture how it felt. Drop voice notes and local field recordings pinned directly to locations on the route.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Feature 3: Time-Locked Confession Notes (Interactive 3D Book Layout) -->
+  <section id="confessions" class="py-28 bg-cardLight dark:bg-cardDark border-y border-borderLight dark:border-borderDark overflow-hidden">
+    <div class="max-w-[1200px] mx-auto px-6">
+      <div class="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-16 items-center">
+        
+        <!-- Left: Copy -->
+        <div class="reveal flex flex-col gap-5 text-left">
+          <div class="text-xs font-bold uppercase tracking-widest text-accent">
+            Time-Locked Logs
+          </div>
+          <h2 class="font-serif text-3xl md:text-4xl font-normal leading-tight">
+            Lock your thoughts.<br>
+            <span class="italic text-accent">Unlock them at home.</span>
+          </h2>
+          <p class="text-textMutedLight dark:text-textMutedDark text-sm leading-relaxed">
+            Some memories are best kept private until the adventure concludes. ReLog introduces confession notes. Log mid-trip secrets, private reflections, or funny remarks. They remain locked for everyone until the album creator ends the trip.
+          </p>
+          <div class="flex gap-3.5 mt-2">
+            <button id="btn-auto-narrate" class="px-5 py-2.5 bg-accent hover:bg-accentHover text-white rounded-full text-xs font-bold transition-colors">
+              Auto Play Demo
+            </button>
+            <button id="btn-reset-demo" class="px-5 py-2.5 border border-borderLight dark:border-borderDark hover:bg-black/5 dark:hover:bg-white/5 text-textLight dark:text-textDark rounded-full text-xs font-bold transition-colors">
+              Reset Journal
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: 3D Book Viewport -->
+        <div class="reveal reveal-delay-1 flex items-center justify-center bg-[#151312] border border-borderLight dark:border-borderDark rounded-card p-8 h-[440px] relative select-none overflow-hidden candle-lighting">
+          
+          <!-- Radial lighting glow -->
+          <div class="absolute inset-0 bg-radial-gradient from-black/0 to-black/85 pointer-events-none z-10"></div>
+          
+          <!-- 3D Book Container -->
+          <div class="book-perspective relative w-[480px] h-[320px] z-10 scale-90 sm:scale-100">
+            <div id="book" class="book-3d absolute inset-0 w-full h-full">
+              
+              <!-- Right Cover Backing -->
+              <div class="book-cover-back absolute inset-y-0 left-1/2 right-0 bg-[#3a0d11] rounded-r-md shadow-2xl border-l border-[#220508] z-1"></div>
+
+              <!-- Left Static Page (Inside Cover / shown on open) -->
+              <div id="page-left" class="absolute inset-y-2 left-2 right-1/2 bg-[#efece6] rounded-l-sm shadow-inner p-4 text-black border-r border-neutral-300/40 opacity-0 transition-opacity duration-500 z-2 text-left">
+                <div class="text-[8px] uppercase tracking-widest text-neutral-500 font-bold mb-2">Introduction</div>
+                <p class="text-[9px] text-neutral-600 leading-relaxed font-sans">
+                  Use ReLog to capture moments in real-time. Keep thoughts private in time-locked vaults, then watch the route reveal itself.
+                </p>
+                <div class="border-t border-neutral-300/50 mt-4 pt-4 text-[9px] text-neutral-400">
+                  Created by Group #142
+                </div>
+              </div>
+
+              <!-- Page 2 (Right static page / Underneath) -->
+              <div id="page-2" class="book-page absolute inset-y-2 left-1/2 right-2 bg-[#efece6] rounded-r-md shadow-inner flex flex-col p-4 text-black z-2 text-left border-l border-neutral-300/40">
+                <div id="digital-map-layer" class="absolute inset-0 bg-[#efece6] rounded-r-md p-4 flex flex-col justify-between opacity-0 transition-opacity duration-1000 z-10">
+                  <div class="text-[7px] uppercase tracking-widest text-accent font-extrabold">Active Trip Replay</div>
+                  <h4 class="font-serif text-sm font-bold text-neutral-800">Cote d'Azur Roadtrip</h4>
+                  
+                  <svg class="w-full h-28 my-1" viewBox="0 0 230 160">
+                    <path d="M 30 130 Q 80 50 140 120 T 210 70" fill="none" stroke="#e65100" stroke-width="3" stroke-linecap="round"></path>
+                    <g class="pulse-marker cursor-pointer" onclick="triggerPinZoom(1, 30, 130)">
+                      <circle cx="30" cy="130" r="5" fill="#e65100"></circle>
+                    </g>
+                    <g class="pulse-marker cursor-pointer" onclick="triggerPinZoom(2, 94, 76)">
+                      <circle cx="94" cy="76" r="5" fill="#e65100"></circle>
+                    </g>
+                    <g class="pulse-marker cursor-pointer" onclick="triggerPinZoom(3, 210, 70)">
+                      <circle cx="210" cy="70" r="5" fill="#e65100"></circle>
+                    </g>
+                  </svg>
+                  <div class="text-[6px] text-neutral-500 italic text-center">Click nodes to reveal secret memories</div>
+                </div>
+
+                <div class="flex-1 flex flex-col justify-between h-full">
+                  <div class="text-[8px] uppercase tracking-widest text-neutral-500 font-bold">Chapter I: Confessions</div>
+                  <p class="text-[10px] text-neutral-700 italic font-serif leading-normal mt-1.5">
+                    "We got lost in the lavender fields, but we didn't care. It was the best mistake of the trip..."
+                  </p>
+                  <svg class="w-full h-24 opacity-35 my-1" viewBox="0 0 230 128">
+                    <path d="M 30 100 Q 80 30 140 90 T 210 50" fill="none" stroke="#000" stroke-width="2" stroke-dasharray="4,4"></path>
+                    <circle cx="30" cy="100" r="4" fill="#000"></circle>
+                    <circle cx="94" cy="58" r="4" fill="#000"></circle>
+                    <circle cx="210" cy="50" r="4" fill="#000"></circle>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Page 1 (Double-sided flipping page) -->
+              <div id="page-1" class="book-page-double absolute inset-y-2 left-1/2 right-2 cursor-pointer z-5">
+                <!-- Front Side -->
+                <div class="page-side page-side-front flex flex-col justify-between h-full w-full">
+                  <div class="flex justify-between items-center">
+                    <span class="text-[8px] uppercase tracking-widest text-neutral-500 font-bold">Trip Log</span>
+                    <span class="text-[7px] text-neutral-400">June 2026</span>
+                  </div>
+                  
+                  <div class="mt-2 flex-1 flex flex-col justify-center text-left">
+                    <h3 class="font-serif text-sm font-bold mb-1">Tokyo & Kyoto</h3>
+                    <p class="text-[10px] text-neutral-600 leading-normal font-sans">
+                      Our group travelogue captures every step of our route. Flip this page to see the digital live map underneath.
+                    </p>
+                  </div>
+
+                  <div class="w-full flex items-center justify-between border-t border-neutral-300/60 pt-2 mt-2">
+                    <span class="text-[8px] text-neutral-500">Page 1 of 2</span>
+                    <span class="text-accent font-bold text-[9px] flex items-center gap-0.5 animate-pulse">
+                      Click to Flip
+                      <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Back Side -->
+                <div class="page-side page-side-back flex flex-col justify-between h-full w-full">
+                  <div class="flex justify-between items-center">
+                    <span class="text-[8px] uppercase tracking-widest text-neutral-500 font-bold">Chapter I Notes</span>
+                    <span class="text-[7px] text-neutral-400">May 2026</span>
+                  </div>
+
+                  <div class="mt-2 flex-1 flex flex-col justify-center text-left">
+                    <h4 class="font-serif text-[11px] font-bold text-neutral-800">Travel Reflections</h4>
+                    <p class="text-[9px] text-neutral-600 italic font-serif leading-relaxed mt-1">
+                      "We started in Tokyo under glowing neon lights, then took the Shinkansen south to Kyoto's serene temples..."
+                    </p>
+                  </div>
+
+                  <div class="w-full flex items-center justify-between border-t border-neutral-300/60 pt-2 mt-2">
+                    <span class="text-accent font-bold text-[9px] flex items-center gap-0.5">
+                      <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                      Click to Go Back
+                    </span>
+                    <span class="text-[8px] text-neutral-500">Page 2 of 2</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Spine crease -->
+              <div class="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-4 bg-gradient-to-r from-black/20 via-black/45 to-black/20 z-20 pointer-events-none"></div>
+
+              <!-- Front Cover (Double-sided 3D sheet) -->
+              <div id="front-cover" class="book-cover absolute inset-y-0 left-1/2 right-0 z-30 origin-left">
+                <!-- Front Side -->
+                <div class="page-side page-side-front bg-[#4e1217] border-l-4 border-[#300508] rounded-r-md flex flex-col items-center justify-center p-4 text-center text-[#d4af37] border border-white/5 shadow-2xl">
+                  <div class="border border-dashed border-[#d4af37]/20 rounded-lg p-4 flex flex-col items-center justify-center w-full h-full">
+                    <div class="w-6 h-6 rounded-full border border-dashed border-[#d4af37]/20 mb-2 flex items-center justify-center">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#d4af37]/20 animate-pulse"></span>
+                    </div>
+                    <h2 class="font-serif text-lg font-bold tracking-wider opacity-20 text-[#d4af37] leading-tight" id="cover-book-title">Japan Trip<br>2026</h2>
+                    <div class="text-[6px] uppercase tracking-wider opacity-15 mt-1 text-[#d4af37]/80">A Group Travelogue</div>
+                  </div>
+                  <canvas id="dustCanvas" class="absolute inset-0 rounded-r-md cursor-crosshair z-20"></canvas>
+                </div>
+                <!-- Back Side (Inside Lining) -->
+                <div class="page-side page-side-back bg-[#4e1217] border-r-4 border-[#300508] rounded-l-md flex flex-col justify-between p-4 text-[#d4af37] border border-white/5 shadow-2xl">
+                  <div class="flex-1 flex flex-col justify-center items-center">
+                    <div class="w-10 h-10 rounded-full border border-[#d4af37]/35 flex items-center justify-center mb-2">
+                      <span class="w-2 h-2 rounded-full bg-[#d4af37]"></span>
+                    </div>
+                    <h3 class="font-serif text-sm font-bold tracking-wide">Japan Trip 2026</h3>
+                    <p class="text-[6px] text-[#d4af37]/75 uppercase tracking-wider mt-0.5">ReLog Shared Volume</p>
+                  </div>
+                  <div class="text-[6px] text-[#d4af37]/50 text-center uppercase tracking-widest border-t border-[#d4af37]/20 pt-2">
+                    Inside Cover
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Polaroid Memory Zoom Popup -->
+          <div id="memory-polaroid" class="absolute w-36 bg-white p-1.5 pb-4 shadow-2xl rounded-sm border border-neutral-300 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-75 pointer-events-none transition-all duration-300 z-50">
+            <div class="w-full aspect-square bg-neutral-900 overflow-hidden rounded-xs relative">
+              <img src="images/album_ui.png" class="w-full h-full object-cover" id="polaroid-img">
+            </div>
+            <div class="mt-2 text-center">
+              <div class="text-[9px] font-bold text-neutral-800" id="polaroid-title">Paris - Day 1</div>
+              <div class="text-[6px] text-neutral-500 uppercase tracking-widest font-semibold mt-0.5" id="polaroid-meta">Photo Capture</div>
+            </div>
+          </div>
+
+          <!-- Fluttering CTA Page -->
+          <div id="cta-page" class="absolute w-56 bg-[#efece6] rounded-md p-4 text-black border border-neutral-300/40 shadow-2xl transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-75 rotate-12 pointer-events-none transition-all duration-700 z-40">
+            <div class="flex flex-col items-center text-center gap-2">
+              <span class="text-[8px] uppercase tracking-widest font-bold text-accent">Unlocked</span>
+              <h3 class="font-serif text-base font-bold text-neutral-800 leading-tight">ReLog²</h3>
+              <p class="text-[10px] text-neutral-600 leading-relaxed max-w-[180px]">
+                Invite friends, write confessions, and replay them dynamically.
+              </p>
+              <a href="#download" class="w-full py-1.5 bg-accent hover:bg-accentHover text-white text-[10px] font-bold rounded-full transition-colors text-center shadow-sm">
+                Get App
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section (Required by SKILL.md) -->
+  <section id="pricing" class="py-28 bg-cardLight dark:bg-cardDark border-t border-borderLight dark:border-borderDark">
+    <div class="max-w-[1200px] mx-auto px-6 text-center flex flex-col items-center gap-16">
+      
+      <div class="flex flex-col gap-4 items-center">
+        <div class="text-xs font-bold uppercase tracking-widest text-accent">
+          Transparent Value
+        </div>
+        <h2 class="font-serif text-3xl md:text-4xl font-normal">
+          Simple, honest pricing.
+        </h2>
+        <p class="text-textMutedLight dark:text-textMutedDark text-sm max-w-[480px]">
+          Every user gets their first album completely free. No subscription required, just buy what you need.
+        </p>
+      </div>
+
+      <!-- Pricing cards grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-[840px] text-left">
+        
+        <!-- Tier 1: Free -->
+        <div class="reveal p-10 bg-transparent border border-borderLight dark:border-borderDark rounded-card flex flex-col justify-between hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300">
+          <div>
+            <div class="text-lg font-bold text-textLight dark:text-textDark mb-2">Free Trip</div>
+            <div class="flex items-baseline gap-1 mb-6">
+              <span class="font-serif text-4xl font-normal text-textLight dark:text-textDark">$0</span>
+              <span class="text-xs text-textMutedLight dark:text-textMutedDark">forever</span>
+            </div>
+            
+            <ul class="text-xs text-textMutedLight dark:text-textMutedDark flex flex-col gap-3.5 mb-8">
+              <li class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> 1 Shared Digital Album
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Up to 40 Group Members
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> 20 Images per Person
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Freezes to final read-only album after trip
+              </li>
+            </ul>
+          </div>
+          <a href="#download" class="w-full text-center bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-textLight dark:text-textDark font-semibold py-3.5 rounded-btn text-sm transition-colors">
+            Start Free
+          </a>
+        </div>
+
+        <!-- Tier 2: Pay As You Go -->
+        <div class="reveal reveal-delay-1 p-10 bg-transparent border-2 border-accent rounded-card flex flex-col justify-between hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 relative">
+          <div class="absolute -top-3.5 right-6 bg-accent text-white px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider">
+            Per-Album pricing
+          </div>
+          
+          <div>
+            <div class="text-lg font-bold text-textLight dark:text-textDark mb-2">Pay As You Go</div>
+            <div class="flex items-baseline gap-1 mb-6">
+              <span class="font-serif text-4xl font-normal text-textLight dark:text-textDark">$5</span>
+              <span class="text-xs text-textMutedLight dark:text-textMutedDark">per album upgrade</span>
+            </div>
+            
+            <ul class="text-xs text-textMutedLight dark:text-textMutedDark flex flex-col gap-3.5 mb-8">
+              <li class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> <strong>One Person Pays, Whole Group Free</strong>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Up to 40 Members (Add-on for more)
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> 50 Images per Person
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Freezes to final read-only album after trip
+              </li>
+            </ul>
+          </div>
+          <a href="#download" class="w-full text-center bg-accent hover:bg-accentHover text-white font-semibold py-3.5 rounded-btn text-sm transition-colors shadow-sm">
+            Upgrade Album
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Link to Detailed Pricing Chart -->
+      <div class="reveal reveal-delay-2 mt-10">
+        <a href="pricing.html" class="inline-flex items-center gap-2 text-accent hover:text-accentHover font-semibold text-base transition-colors group">
+          View Full Plan Details & Features Chart
+          <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Accordion FAQ Section (Required by SKILL.md) -->
+  <section id="faq" class="py-28 border-t border-borderLight dark:border-borderDark">
+    <div class="max-w-[800px] mx-auto px-6">
+      <div class="text-center flex flex-col items-center gap-4 mb-16">
+        <div class="text-xs font-bold uppercase tracking-widest text-accent">FAQ</div>
+        <h2 class="font-serif text-3xl md:text-4xl font-normal">Frequently Asked Questions</h2>
+      </div>
+
+      <div class="flex flex-col border-t border-borderLight dark:border-borderDark">
+        <!-- FAQ 1 -->
+        <div class="faq-item reveal border-b border-borderLight dark:border-borderDark py-6 cursor-pointer">
+          <div class="flex justify-between items-center font-serif text-lg md:text-xl">
+            <h3>How do shared invite codes work?</h3>
+            <svg class="w-5 h-5 transform transition-transform duration-300 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+          <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+            <p class="pt-4 text-sm text-textMutedLight dark:text-textMutedDark font-sans leading-relaxed">
+              Simply generate a 6-digit invite code inside your ReLog² album. Share it with your travel partners, and they can instantly join the shared map and drop their live photos and voice logs.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="faq-item reveal border-b border-borderLight dark:border-borderDark py-6 cursor-pointer">
+          <div class="flex justify-between items-center font-serif text-lg md:text-xl">
+            <h3>Can I use ReLog² offline while trekking?</h3>
+            <svg class="w-5 h-5 transform transition-transform duration-300 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+          <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+            <p class="pt-4 text-sm text-textMutedLight dark:text-textMutedDark font-sans leading-relaxed">
+              Yes. ReLog² cache-buffers your location, photos, and voice notes locally when offline. As soon as your phone connects to Wi-Fi or cellular networks, they sync onto the shared map.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-item reveal border-b border-borderLight dark:border-borderDark py-6 cursor-pointer">
+          <div class="flex justify-between items-center font-serif text-lg md:text-xl">
+            <h3>Are confession logs completely private?</h3>
+            <svg class="w-5 h-5 transform transition-transform duration-300 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+          <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+            <p class="pt-4 text-sm text-textMutedLight dark:text-textMutedDark font-sans leading-relaxed">
+              Yes. Confessions are encrypted and fully hidden from other group members. They can only be unlocked for group viewing once the album creator ends the trip.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA Section -->
+  <section id="download" class="py-28 bg-accent/5 text-center border-t border-borderLight dark:border-borderDark">
+    <div class="max-w-[600px] mx-auto px-6 flex flex-col gap-6 items-center">
+      <h2 class="reveal font-serif text-3xl md:text-4xl lg:text-5xl font-normal leading-[1.15]">
+        Start mapping your group memories today.
+      </h2>
+      <p class="reveal reveal-delay-1 text-sm md:text-base text-textMutedLight dark:text-textMutedDark max-w-[440px]">
+        Available on the App Store and Google Play. Get your invite code and coordinate your album in minutes.
+      </p>
+      <div class="reveal reveal-delay-2 flex flex-wrap justify-center gap-4 mt-3">
+        <a href="#" class="bg-accent hover:bg-accentHover text-white px-7 py-3.5 rounded-btn font-semibold text-sm transition-all hover:-translate-y-0.5 shadow-sm">
+          Download for iOS
+        </a>
+        <a href="#" class="bg-accent hover:bg-accentHover text-white px-7 py-3.5 rounded-btn font-semibold text-sm transition-all hover:-translate-y-0.5 shadow-sm">
+          Download for Android
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="py-12 border-t border-borderLight dark:border-borderDark text-xs text-textMutedLight dark:text-textMutedDark">
+    <div class="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-6">
+      
+      <div class="font-serif text-lg font-semibold text-textLight dark:text-textDark flex items-center gap-1.5">
+        <span class="flex items-center justify-center w-3.5 h-3.5 border-2 border-accent rounded-full">
+          <span class="logo-dot w-1 h-1 rounded-full bg-accent animate-logo-pulse"></span>
+        </span>
+        ReLog<span class="text-[10px] transform -translate-y-1">2</span>
+      </div>
+      
+      <div class="flex gap-8">
+        <a href="#" class="hover:text-accent transition-colors">Home</a>
+        <a href="features.html" class="hover:text-accent transition-colors">Features</a>
+        <a href="pricing.html" class="hover:text-accent transition-colors">Pricing</a>
+        <a href="#faq" class="hover:text-accent transition-colors">FAQ</a>
+      </div>
+      
+      <div>
+        &copy; 2026 ReLog. Built for travelers.
+      </div>
+      
+    </div>
+  </footer>
+
+  <!-- Scroll-Reveal and Motion Animation Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      // Theme Switcher Logic
+      const toggleBtn = document.getElementById('theme-toggle');
+      const htmlEl = document.documentElement;
+      
+      // Initialize theme from storage
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        htmlEl.classList.add('dark');
+      } else {
+        htmlEl.classList.remove('dark');
+      }
+      
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          if (htmlEl.classList.contains('dark')) {
+            htmlEl.classList.remove('dark');
+            localStorage.theme = 'light';
+          } else {
+            htmlEl.classList.add('dark');
+            localStorage.theme = 'dark';
+          }
+        });
+      }
+
+      // IntersectionObserver Scroll Reveals
+      const revealElements = document.querySelectorAll('.reveal');
+      const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.15
+      };
+      
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-visible');
+            
+            // Trigger Polaroid Cascade when cascade section scrolls into view
+            if (entry.target.id === 'cascade-section') {
+              runCascade();
+            }
+
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+      
+      revealElements.forEach(element => {
+        observer.observe(element);
+      });
+
+      // Polaroid Cascade Motion Logic
+      const cascadeCards = document.querySelectorAll('.cascade-card');
+      const activeRoutePath = document.getElementById('activeRoutePath');
+      const replayBtn = document.getElementById('btn-cascade-replay');
+      const cascadeSection = document.getElementById('cascade-section');
+      
+      let hasCascaded = false;
+
+      const runCascade = () => {
+        hasCascaded = true;
+        
+        // Reset path drawing and card states
+        gsap.set(activeRoutePath, { strokeDasharray: 1000, strokeDashoffset: 1000 });
+        gsap.set(cascadeCards, { y: -450, rotation: () => Math.random() * 90 - 45, opacity: 0 });
+
+        const tl = gsap.timeline();
+
+        // 1. Draw route path line first
+        tl.to(activeRoutePath, {
+          strokeDashoffset: 0,
+          duration: 1.8,
+          ease: "power2.inOut"
+        });
+
+        // 2. Drop the polaroids in a staggered sequence
+        cascadeCards.forEach((card, index) => {
+          const rot = [ -8, 6, -4, 12, -10 ][index];
+          
+          tl.to(card, {
+            y: 0,
+            rotation: rot,
+            opacity: 1,
+            duration: 1.2,
+            ease: "bounce.out"
+          }, `-=${index === 0 ? 1.4 : 0.95}`); // overlap with path drawing
+        });
+      };
+
+      if (replayBtn) {
+        replayBtn.addEventListener('click', runCascade);
+      }
+
+      // High-Performance On-Scroll Fade & Parallax
+      if (cascadeSection) {
+        window.addEventListener('scroll', () => {
+          const rect = cascadeSection.getBoundingClientRect();
+          const viewHeight = window.innerHeight;
+          
+          if (rect.bottom < viewHeight && rect.bottom > 0) {
+            const ratio = rect.bottom / viewHeight;
+            cascadeSection.style.opacity = Math.max(0.15, ratio).toFixed(2);
+            cascadeSection.style.transform = `translateY(${(1 - ratio) * 20}px)`;
+          } else {
+            cascadeSection.style.opacity = 1;
+            cascadeSection.style.transform = 'translateY(0px)';
+          }
+        }, { passive: true });
+      }
+
+      // Audio Chime Synthesizer
+      const playChime = (freq) => {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.0);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 1.0);
+        } catch (e) {
+          console.warn("Audio Context blocked.");
+        }
+      };
+
+      // 3D Book Scratch & Reveal Logic
+      const book = document.getElementById('book');
+      const frontCover = document.getElementById('front-cover');
+      const page1 = document.getElementById('page-1');
+      const digitalLayer = document.getElementById('digital-map-layer');
+      const dustCanvas = document.getElementById('dustCanvas');
+      const ctxDust = dustCanvas ? dustCanvas.getContext('2d') : null;
+      const ctaPage = document.getElementById('cta-page');
+      
+      let isScratching = false;
+      let scratchComplete = false;
+
+      const fitCanvas = () => {
+        if (!dustCanvas || !frontCover) return;
+        dustCanvas.width = frontCover.clientWidth;
+        dustCanvas.height = frontCover.clientHeight;
+        drawDust();
+      };
+      
+      const drawDust = () => {
+        if (!ctxDust || !dustCanvas) return;
+        const w = dustCanvas.width;
+        const h = dustCanvas.height;
+        ctxDust.fillStyle = '#5c544d'; 
+        ctxDust.fillRect(0, 0, w, h);
+
+        ctxDust.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctxDust.lineWidth = 1;
+        for (let i = 0; i < 25; i++) {
+          ctxDust.beginPath();
+          ctxDust.moveTo(Math.random() * w, Math.random() * h);
+          ctxDust.quadraticCurveTo(Math.random() * w, Math.random() * h, Math.random() * w, Math.random() * h);
+          ctxDust.stroke();
+        }
+
+        ctxDust.fillStyle = '#ded9d2';
+        ctxDust.font = 'normal 10px Manrope';
+        ctxDust.textAlign = 'center';
+        ctxDust.fillText('Scratch to Uncover Journal', w / 2, h / 2 + 80);
+      };
+
+      const wipe = (e) => {
+        if (!isScratching || scratchComplete || !ctxDust || !dustCanvas) return;
+        const rect = dustCanvas.getBoundingClientRect();
+        const scaleX = dustCanvas.width / rect.width;
+        const scaleY = dustCanvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+
+        ctxDust.globalCompositeOperation = 'destination-out';
+        ctxDust.beginPath();
+        ctxDust.arc(x, y, 20, 0, Math.PI * 2);
+        ctxDust.fill();
+
+        checkScratchPercentage();
+      };
+
+      const checkScratchPercentage = () => {
+        if (!ctxDust || !dustCanvas) return;
+        const w = dustCanvas.width;
+        const h = dustCanvas.height;
+        const imgData = ctxDust.getImageData(0, 0, w, h);
+        const pixels = imgData.data;
+        let transparent = 0;
+        for (let i = 3; i < pixels.length; i += 4) {
+          if (pixels[i] === 0) transparent++;
+        }
+        
+        const percent = Math.floor((transparent / (w * h)) * 100);
+        
+        const titleEl = document.getElementById('cover-book-title');
+        if (titleEl) {
+          titleEl.style.opacity = (0.2 + (percent / 100) * 0.8).toFixed(2);
+        }
+
+        if (percent >= 60 && !scratchComplete) {
+          scratchComplete = true;
+          triggerBookAwake();
+        }
+      };
+
+      if (dustCanvas) {
+        dustCanvas.addEventListener('mousedown', () => isScratching = true);
+        dustCanvas.addEventListener('mouseup', () => isScratching = false);
+        dustCanvas.addEventListener('mousemove', wipe);
+        
+        dustCanvas.addEventListener('touchmove', (e) => {
+          if (e.touches && e.touches[0]) {
+            isScratching = true;
+            wipe(e.touches[0]);
+          }
+        });
+        dustCanvas.addEventListener('touchend', () => isScratching = false);
+      }
+
+      // Set initial centered book state
+      if (book) {
+        gsap.set(book, { x: 110 });
+      }
+
+      const triggerBookAwake = () => {
+        if (!book || !frontCover) return;
+        
+        gsap.timeline()
+          .to(book, {
+            x: "+=5",
+            rotationZ: "+=1",
+            yoyo: true,
+            repeat: 7,
+            duration: 0.05
+          })
+          .to(book, {
+            x: 0,
+            rotationZ: 0,
+            duration: 0.8,
+            ease: "power2.inOut",
+            onStart: () => {
+              playChime(329.63);
+              frontCover.classList.add('open');
+              
+              const leftPage = document.getElementById('page-left');
+              if (leftPage) leftPage.classList.remove('opacity-0');
+            }
+          })
+          .call(() => {
+            setTimeout(() => {
+              if (digitalLayer) {
+                digitalLayer.classList.remove('opacity-0');
+                digitalLayer.classList.add('opacity-100');
+                playChime(392.00);
+              }
+            }, 1200);
+          });
+      };
+
+      if (page1) {
+        page1.addEventListener('click', () => {
+          if (page1.classList.contains('flipped')) {
+            page1.classList.remove('flipped');
+            playChime(392);
+          } else {
+            page1.classList.add('flipped');
+            playChime(440);
+          }
+        });
+      }
+
+      const polaroid = document.getElementById('memory-polaroid');
+      const pImg = document.getElementById('polaroid-img');
+      const pTitle = document.getElementById('polaroid-title');
+      const pMeta = document.getElementById('polaroid-meta');
+
+      window.triggerPinZoom = (pinId, x, y) => {
+        if (!polaroid) return;
+        const pinData = {
+          1: { title: "Nizza Beach", meta: "Voice Clip Log", img: "images/album_ui.png" },
+          2: { title: "Esterel Pass", meta: "Photo Pin", img: "images/map_ui.png" },
+          3: { title: "Cannes Port", meta: "Note Capture", img: "images/album_ui.png" }
+        }[pinId];
+
+        if (pImg) pImg.src = pinData.img;
+        if (pTitle) pTitle.textContent = pinData.title;
+        if (pMeta) pMeta.textContent = pinData.meta;
+
+        polaroid.style.left = `${120 + x}px`;
+        polaroid.style.top = `${y - 20}px`;
+
+        gsap.killTweensOf(polaroid);
+        gsap.fromTo(polaroid, 
+          { scale: 0.75, opacity: 0, y: 10 },
+          { scale: 1.05, opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.5)" }
+        );
+        playChime(480);
+
+        setTimeout(() => {
+          triggerClosingCTA();
+        }, 3200);
+      };
+
+      const triggerClosingCTA = () => {
+        if (!frontCover || !page1 || !ctaPage) return;
+        frontCover.classList.remove('open');
+        page1.classList.remove('flipped');
+        
+        gsap.killTweensOf(ctaPage);
+        gsap.fromTo(ctaPage,
+          { scale: 0.65, opacity: 0, rotation: 30, x: -60, y: -100 },
+          { scale: 1, opacity: 1, rotation: 6, x: 0, y: 0, duration: 1.4, delay: 0.6, ease: "power2.out" }
+        );
+        playChime(523.25);
+      };
+
+      const btnAuto = document.getElementById('btn-auto-narrate');
+      const btnReset = document.getElementById('btn-reset-demo');
+
+      if (btnAuto) {
+        btnAuto.addEventListener('click', () => {
+          if (!dustCanvas) return;
+          gsap.to(dustCanvas, {
+            opacity: 0.08,
+            duration: 1.5,
+            onComplete: () => {
+              scratchComplete = true;
+              triggerBookAwake();
+            }
+          });
+        });
+      }
+
+      if (btnReset) {
+        btnReset.addEventListener('click', () => {
+          scratchComplete = false;
+          isScratching = false;
+          
+          if (dustCanvas) {
+            gsap.set(dustCanvas, { opacity: 1 });
+            fitCanvas();
+          }
+          if (frontCover) frontCover.classList.remove('open');
+          if (page1) page1.classList.remove('flipped');
+          if (digitalLayer) {
+            digitalLayer.classList.remove('opacity-100');
+            digitalLayer.classList.add('opacity-0');
+          }
+          if (polaroid) gsap.set(polaroid, { opacity: 0, scale: 0.75 });
+          if (ctaPage) gsap.set(ctaPage, { opacity: 0, scale: 0.75 });
+
+          // Reset left page fading
+          const leftPage = document.getElementById('page-left');
+          if (leftPage) leftPage.classList.add('opacity-0');
+
+          // Center book back
+          gsap.set(book, { x: 110, rotationZ: 0 });
+        });
+      }
+
+      // Init canvas size
+      fitCanvas();
+      window.addEventListener('resize', fitCanvas);
+
+      // Interactive Stats Count-Up Animation (via IntersectionObserver)
+      const statsObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const statElements = entry.target.querySelectorAll('.stat-number');
+            statElements.forEach(stat => {
+              const target = parseFloat(stat.getAttribute('data-target'));
+              const suffix = stat.getAttribute('data-suffix') || '';
+              const isFloat = target % 1 !== 0;
+              const tempObj = { val: 0 };
+              
+              gsap.to(tempObj, {
+                val: target,
+                duration: 2.2,
+                ease: "power3.out",
+                onUpdate: () => {
+                  if (isFloat) {
+                    stat.textContent = tempObj.val.toFixed(1) + suffix;
+                  } else {
+                    stat.textContent = Math.floor(tempObj.val).toLocaleString() + suffix;
+                  }
+                }
+              });
+            });
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+
+      // The stats observer is triggered dynamically on preloader completion above.
+
+      // Horizontal Parallax scroll movement for the stats track
+      window.addEventListener('scroll', () => {
+        const statsRow = document.getElementById('stats-row');
+        const statsTrack = document.getElementById('stats-track');
+        if (!statsRow || !statsTrack) return;
+
+        const rect = statsRow.getBoundingClientRect();
+        const viewHeight = window.innerHeight;
+
+        if (rect.top < viewHeight && rect.bottom > 0) {
+          const progress = (viewHeight - rect.top) / (viewHeight + rect.height);
+          // Translate track horizontally from +60px to -60px as we scroll
+          const tx = 60 - (progress * 120);
+          gsap.to(statsTrack, { x: tx, duration: 0.3, ease: "power1.out", overwrite: "auto" });
+        }
+      });
+
+      // Preloader Click Interaction & Expanding Shutter Transition
+      const preloaderBtn = document.getElementById('preloader-btn');
+      const preloaderDot = document.getElementById('preloader-dot');
+      const preloaderText = document.getElementById('preloader-text');
+      const preloader = document.getElementById('preloader');
+
+      let hasRevealed = false;
+
+      function startRevealAnimation() {
+        if (hasRevealed) return;
+        hasRevealed = true;
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            // Unlock page scrolling
+            document.body.style.overflow = '';
+            document.body.style.height = '';
+            
+            // Start observing stats after preloader is dismissed
+            const statsRow = document.getElementById('stats-row');
+            if (statsRow) {
+              statsObserver.observe(statsRow);
+            }
+          }
+        });
+
+        tl.to(preloaderBtn, {
+          scale: 0.85,
+          duration: 0.15,
+          ease: "power2.out"
+        })
+        .to(preloaderDot, {
+          scale: 60,
+          duration: 0.9,
+          ease: "power3.inOut"
+        })
+        .to(preloader, {
+          opacity: 0,
+          duration: 0.6,
+          ease: "power2.inOut",
+          onStart: () => {
+            gsap.to(preloaderText, { opacity: 0, duration: 0.2 });
+          }
+        }, "-=0.3")
+        .set(preloader, { visibility: "hidden" })
+        .from(".logo-record-container", {
+          scale: 0,
+          duration: 0.6,
+          ease: "back.out(1.7)"
+        }, "-=0.2")
+        .from(".logo-text-chars", {
+          x: -20,
+          opacity: 0,
+          duration: 0.5,
+          ease: "power2.out"
+        }, "-=0.4")
+        .from(".logo-text-sup", {
+          y: 10,
+          opacity: 0,
+          duration: 0.4,
+          ease: "power2.out"
+        }, "-=0.3");
+      }
+
+      if (preloaderBtn && preloaderDot) {
+        // Manual click fallback
+        preloaderBtn.addEventListener('click', startRevealAnimation);
+        
+        // Auto-press to start after a brief delay (1.2 seconds) to let user see the glowing button
+        setTimeout(startRevealAnimation, 1200);
+      }
+
+      // FAQ Accordion Toggle
+      document.querySelectorAll('.faq-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const answer = item.querySelector('.faq-answer');
+          const icon = item.querySelector('svg');
+          const isOpen = answer.style.maxHeight !== '0px' && answer.style.maxHeight !== '';
+          
+          // Close all other FAQs
+          document.querySelectorAll('.faq-answer').forEach(otherAnswer => {
+            otherAnswer.style.maxHeight = '0px';
+            const otherIcon = otherAnswer.previousElementSibling.querySelector('svg');
+            if (otherIcon) otherIcon.style.transform = 'rotate(0deg)';
+          });
+
+          if (!isOpen) {
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+            if (icon) icon.style.transform = 'rotate(180deg)';
+          }
+        });
+      });
+
+    });
+  </script>
+</body>
+</html>

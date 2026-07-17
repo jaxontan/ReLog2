@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReLog² - Transparent Pricing & Plans Comparison</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Choose the right ReLog² plan for your journey. Compare the Free Trip plan and Bundle Pack features, including quotas, book exports, and vaults.">
+  
+  <!-- Font Integrations -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- GSAP Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bgLight: '#f6f5f3',
+            bgDark: '#0c0c0d',
+            cardLight: '#ffffff',
+            cardDark: '#121214',
+            textLight: '#141414',
+            textDark: '#f6f5f3',
+            textMutedLight: '#626260',
+            textMutedDark: '#a3a3a1',
+            accent: '#e65100',
+            accentHover: '#b33600',
+            borderLight: 'rgba(20, 20, 20, 0.06)',
+            borderDark: 'rgba(255, 255, 255, 0.08)',
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            sans: ['Manrope', 'sans-serif'],
+          },
+          borderRadius: {
+            btn: '32px',
+            card: '16px',
+            img: '20px',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/css">
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="bg-bgLight dark:bg-bgDark text-textLight dark:text-textDark font-sans antialiased overflow-x-hidden">
+
+  <!-- Sticky Top Navigation Bar -->
+  <nav class="fixed top-0 left-0 right-0 h-[76px] bg-bgLight/80 dark:bg-bgDark/80 backdrop-blur-md border-b border-borderLight dark:border-borderDark z-50 transition-all duration-300">
+    <div class="max-w-[1200px] mx-auto px-6 h-full flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="font-serif text-2xl font-semibold tracking-tight flex items-center gap-2">
+        <span class="logo-record-container flex items-center justify-center w-4 h-4 border-[2.5px] border-accent rounded-full">
+          <span class="logo-dot w-1.5 h-1.5 rounded-full bg-accent"></span>
+        </span>
+        <span>ReLog</span><span class="text-sm font-semibold opacity-70 transform -translate-y-1">2</span>
+      </a>
+
+      <!-- Desktop Links -->
+      <div class="hidden md:flex items-center gap-8 text-sm font-semibold text-textMutedLight dark:text-textMutedDark">
+        <a href="index.html" class="hover:text-accent transition-colors">Home</a>
+        <a href="features.html" class="hover:text-accent transition-colors">Features</a>
+        <a href="#" class="text-accent transition-colors">Pricing</a>
+        <a href="index.html#faq" class="hover:text-accent transition-colors">FAQ</a>
+      </div>
+
+      <!-- Right CTAs -->
+      <div class="flex items-center gap-4">
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle" class="p-2 border border-borderLight dark:border-borderDark rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors" aria-label="Toggle Theme">
+          <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+          </svg>
+          <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+        </button>
+
+        <a href="index.html#download" class="hidden sm:inline-block bg-accent hover:bg-accentHover text-white px-5 py-2 rounded-btn text-sm font-semibold transition-colors shadow-sm">
+          Get App
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Title Header -->
+  <header class="pt-36 pb-16 text-center bg-cardLight/30 dark:bg-cardDark/30 border-b border-borderLight dark:border-borderDark">
+    <div class="max-w-[800px] mx-auto px-6 flex flex-col items-center gap-4">
+      <div class="text-xs font-bold uppercase tracking-widest text-accent">Transparent Value</div>
+      <h1 class="font-serif text-4xl md:text-5xl font-normal leading-tight tracking-tight">
+        Simple, honest pricing.
+      </h1>
+      <p class="text-textMutedLight dark:text-textMutedDark text-sm md:text-base max-w-[480px]">
+        No monthly subscriptions. Choose between starting free forever or upgrading once to unlock unlimited space for your team.
+      </p>
+    </div>
+  </header>
+
+  <!-- Pricing Cards Section -->
+  <main class="py-20 max-w-[1200px] mx-auto px-6 flex flex-col gap-24">
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-[840px] mx-auto text-left">
+      
+      <!-- Tier 1: Free -->
+      <div class="reveal p-10 bg-transparent border border-borderLight dark:border-borderDark rounded-card flex flex-col justify-between hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300">
+        <div>
+          <div class="text-lg font-bold text-textLight dark:text-textDark mb-2">Free Trip</div>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="font-serif text-4xl font-normal text-textLight dark:text-textDark">$0</span>
+            <span class="text-xs text-textMutedLight dark:text-textMutedDark">forever</span>
+          </div>
+          
+          <ul class="text-xs text-textMutedLight dark:text-textMutedDark flex flex-col gap-3.5 mb-8">
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> 1 Shared Digital Album
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Up to 40 Group Members
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> 20 Images per Person
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Freezes to final read-only album after trip
+            </li>
+          </ul>
+        </div>
+        <a href="index.html#download" class="w-full text-center bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-textLight dark:text-textDark font-semibold py-3.5 rounded-btn text-sm transition-colors">
+          Start Free
+        </a>
+      </div>
+
+      <!-- Tier 2: Pay As You Go -->
+      <div class="reveal reveal-delay-1 p-10 bg-transparent border-2 border-accent rounded-card flex flex-col justify-between hover:shadow-xl hover:shadow-accent/5 transition-all duration-300 relative">
+        <div class="absolute -top-3.5 right-6 bg-accent text-white px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider">
+          Per-Album pricing
+        </div>
+        
+        <div>
+          <div class="text-lg font-bold text-textLight dark:text-textDark mb-2">Pay As You Go</div>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="font-serif text-4xl font-normal text-textLight dark:text-textDark">$5</span>
+            <span class="text-xs text-textMutedLight dark:text-textMutedDark">per album upgrade</span>
+          </div>
+          
+          <ul class="text-xs text-textMutedLight dark:text-textMutedDark flex flex-col gap-3.5 mb-8">
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> <strong>One Person Pays, Whole Group Free</strong>
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Up to 40 Members (Add-on for more)
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> 50 Images per Person
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Freezes to final read-only album after trip
+            </li>
+          </ul>
+        </div>
+        <a href="index.html#download" class="w-full text-center bg-accent hover:bg-accentHover text-white font-semibold py-3.5 rounded-btn text-sm transition-colors shadow-sm">
+          Upgrade Album
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Features Comparison Chart -->
+    <section class="reveal scroll-mt-24 w-full max-w-[960px] mx-auto">
+      <div class="border-b border-borderLight dark:border-borderDark pb-4 mb-8 text-center sm:text-left">
+        <h2 class="font-serif text-2xl md:text-3xl font-normal">Detailed Plan Comparison</h2>
+        <p class="text-textMutedLight dark:text-textMutedDark text-xs mt-1.5">Review full specification parameters and limits across both plans.</p>
+      </div>
+
+      <div class="overflow-x-auto w-full border border-borderLight dark:border-borderDark rounded-card bg-cardLight/30 dark:bg-cardDark/30">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-borderLight dark:border-borderDark bg-black/5 dark:bg-white/5">
+              <th class="p-4 sm:p-5 font-bold uppercase tracking-wider text-textLight dark:text-textDark">Features Matrix</th>
+              <th class="p-4 sm:p-5 font-bold uppercase tracking-wider text-textLight dark:text-textDark w-[180px] sm:w-[220px]">Free Trip</th>
+              <th class="p-4 sm:p-5 font-bold uppercase tracking-wider text-textLight dark:text-textDark w-[180px] sm:w-[220px]">Pay As You Go</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-borderLight dark:divide-borderDark">
+            
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Pricing Structure</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">Free Forever</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">$5 per Upgraded Album</td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Group Payment Concept</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">Free for everyone</td>
+              <td class="p-4 text-accent font-semibold">One Person Pays, Whole Group Free</td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Group Members Limit</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">Up to 40 People</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark font-semibold">Up to 40 People (Add-on for more)</td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Image Quota</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">20 Images per Person</td>
+              <td class="p-4 text-accent font-semibold font-sans">50 Images per Person</td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Active Event Period</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">7 Days Active</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark font-sans">30 Days Active</td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Post-Event Status</td>
+              <td class="p-4 text-[#e65100] font-semibold">Freezes to Final Read-Only Album</td>
+              <td class="p-4 text-[#e65100] font-semibold">Freezes to Final Read-Only Album</td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Time-Locked Vaults</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">Offline Caches only</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg> Fully Included
+              </td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">PDF Layout Book Export</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">Standard (Default) Layout</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg> Premium High-Res Layouts
+              </td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Offline Sync Engine</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">Included</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg> Included
+              </td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Album Revocation Rule</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">1-time revoke if 0 participants. Unanimous group vote required to delete once active.</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">1-time revoke if 0 participants. Unanimous group vote required to delete once active.</td>
+            </tr>
+
+            <tr class="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
+              <td class="p-4 font-semibold text-textLight dark:text-textDark">Customer Support</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">Bug & Error reporting (No 24/7)</td>
+              <td class="p-4 text-textMutedLight dark:text-textMutedDark">Bug & Error reporting (Bounty Reward given for verified reports / No 24/7)</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pricing FAQs Accordion -->
+    <section class="reveal max-w-[800px] mx-auto w-full border-t border-borderLight dark:border-borderDark pt-16">
+      <div class="text-center flex flex-col items-center gap-4 mb-12">
+        <div class="text-xs font-bold uppercase tracking-widest text-accent">Pricing Help</div>
+        <h2 class="font-serif text-2xl md:text-3xl font-normal">Pricing Frequently Asked Questions</h2>
+      </div>
+
+      <div class="flex flex-col border-t border-borderLight dark:border-borderDark" id="pricing-faq">
+        
+        <!-- FAQ 1 -->
+        <div class="faq-item border-b border-borderLight dark:border-borderDark py-5 cursor-pointer">
+          <div class="flex justify-between items-center font-serif text-base sm:text-lg">
+            <h3>Is the $5 Pay As You Go fee a subscription?</h3>
+            <svg class="w-4 h-4 transform transition-transform duration-300 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+          <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+            <p class="pt-4 text-xs text-textMutedLight dark:text-textMutedDark font-sans leading-relaxed">
+              No. The Pay As You Go upgrade is a one-time purchase per album. Once upgraded, your entire group joins, maps, and captures memories completely free.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="faq-item border-b border-borderLight dark:border-borderDark py-5 cursor-pointer">
+          <div class="flex justify-between items-center font-serif text-base sm:text-lg">
+            <h3>Do my friends need to pay to join my upgraded album?</h3>
+            <svg class="w-4 h-4 transform transition-transform duration-300 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+          <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+            <p class="pt-4 text-xs text-textMutedLight dark:text-textMutedDark font-sans leading-relaxed">
+              No. Only the album creator upgrades the album. All other group members can download the app and collaborate on the map completely free.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-item border-b border-borderLight dark:border-borderDark py-5 cursor-pointer">
+          <div class="flex justify-between items-center font-serif text-base sm:text-lg">
+            <h3>Can I delete or revoke an album once created?</h3>
+            <svg class="w-4 h-4 transform transition-transform duration-300 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+          <div class="faq-answer max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+            <p class="pt-4 text-xs text-textMutedLight dark:text-textMutedDark font-sans leading-relaxed">
+              Yes. You can revoke and delete a newly created album 1 time if no other participants have joined yet. However, once group members have joined and shared memories, deleting the album requires unanimous consent (all group members must vote to agree) to prevent accidental loss of shared travel memories.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer Section -->
+  <footer class="py-12 border-t border-borderLight dark:border-borderDark text-xs text-textMutedLight dark:text-textMutedDark">
+    <div class="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-6">
+      
+      <div class="font-serif text-lg font-semibold text-textLight dark:text-textDark flex items-center gap-1.5">
+        <span class="flex items-center justify-center w-3.5 h-3.5 border-2 border-accent rounded-full">
+          <span class="logo-dot w-1.5 h-1.5 rounded-full bg-accent"></span>
+        </span>
+        ReLog<span class="text-[10px] transform -translate-y-1">2</span>
+      </div>
+      
+      <div class="flex gap-8">
+        <a href="index.html" class="hover:text-accent transition-colors">Home</a>
+        <a href="features.html" class="hover:text-accent transition-colors">Features</a>
+        <a href="#" class="hover:text-accent transition-colors">Pricing</a>
+        <a href="index.html#faq" class="hover:text-accent transition-colors">FAQ</a>
+      </div>
+      
+      <div>
+        &copy; 2026 ReLog. Built for travelers.
+      </div>
+      
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      // Theme Switcher Logic
+      const toggleBtn = document.getElementById('theme-toggle');
+      const htmlEl = document.documentElement;
+      
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        htmlEl.classList.add('dark');
+      } else {
+        htmlEl.classList.remove('dark');
+      }
+      
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          if (htmlEl.classList.contains('dark')) {
+            htmlEl.classList.remove('dark');
+            localStorage.theme = 'light';
+          } else {
+            htmlEl.classList.add('dark');
+            localStorage.theme = 'dark';
+          }
+        });
+      }
+
+      // IntersectionObserver Scroll Reveals
+      const revealElements = document.querySelectorAll('.reveal');
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      revealElements.forEach(el => revealObserver.observe(el));
+
+      // FAQ Accordion Toggle
+      document.querySelectorAll('.faq-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const answer = item.querySelector('.faq-answer');
+          const arrow = item.querySelector('svg');
+          
+          if (answer.style.maxHeight && answer.style.maxHeight !== '0px') {
+            answer.style.maxHeight = '0px';
+            arrow.classList.remove('rotate-180');
+          } else {
+            // Close all first
+            document.querySelectorAll('.faq-answer').forEach(a => a.style.maxHeight = '0px');
+            document.querySelectorAll('.faq-item svg').forEach(s => s.classList.remove('rotate-180'));
+            
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+            arrow.classList.add('rotate-180');
+          }
+        });
+      });
+
+    });
+  </script>
+</body>
+</html>
