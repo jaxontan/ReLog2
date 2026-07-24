@@ -4,9 +4,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../features/auth/presentation/view_models/auth_view_model.dart';
 import '../../data/repositories/message_repository.dart';
+import '../../data/repositories/notification_sender.dart';
 import '../../data/models/message.dart';
 
 final messageRepositoryProvider = Provider<MessageRepository>((_) => MessageRepository());
+final notificationSenderProvider = Provider<NotificationSender>((_) => NotificationSender());
 
 // Stream of messages for an album (real-time)
 final albumMessagesProvider = StreamProvider.autoDispose.family<List<Message>, String>(
@@ -31,15 +33,31 @@ final sendMessageAction = Provider.autoDispose<
     Map<String, dynamic> metadata = const {},
   }) async {
     final repo = ref.read(messageRepositoryProvider);
+    final notificationSender = ref.read(notificationSenderProvider);
     final userId = ref.read(authServiceProvider).currentUser?.id;
+    final userEmail = ref.read(authServiceProvider).currentUser?.email ?? 'Someone';
     if (userId == null) return (null, AuthFailure('Not authenticated'));
-    return repo.sendMessage(
+
+    final result = await repo.sendMessage(
       albumId: albumId,
       userId: userId,
       content: content,
       type: type,
       metadata: metadata,
     );
+
+    // Send push notification to other members
+    if (result.$1 != null) {
+      await notificationSender.sendChatNotification(
+        albumId: albumId,
+        senderId: userId,
+        senderName: userEmail.split('@').first,
+        message: content,
+        messageId: result.$1!.id,
+      );
+    }
+
+    return result;
   };
 });
 

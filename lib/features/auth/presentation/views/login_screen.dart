@@ -1,9 +1,11 @@
 /// Cartographer's Journal HTML → Flutter login. Skipped sticker animations + grid bg, add when motion asked.
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../app/design/design_system.dart';
 import '../view_models/auth_view_model.dart';
+import '../../../../features/legal/presentation/views/legal_document_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -147,11 +149,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 style: DSTypography.journalSmall.copyWith(
                                   color: scheme.onSurface.withValues(alpha: 0.7),
                                 ),
-                                children: const [
-                                  TextSpan(text: 'I have read and agree to the '),
-                                  TextSpan(text: 'User Agreement', style: TextStyle(color: Color(0xFF823B18), fontWeight: FontWeight.w600)),
-                                  TextSpan(text: ' and '),
-                                  TextSpan(text: 'Privacy Policy', style: TextStyle(color: Color(0xFF823B18), fontWeight: FontWeight.w600)),
+                                children: [
+                                  const TextSpan(text: 'I have read and agree to the '),
+                                  TextSpan(
+                                    text: 'User Agreement',
+                                    style: TextStyle(
+                                      color: Color(0xFF823B18),
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: Color(0xFF823B18),
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () => context.openUserAgreement(),
+                                  ),
+                                  const TextSpan(text: ' and '),
+                                  TextSpan(
+                                    text: 'Privacy Policy',
+                                    style: TextStyle(
+                                      color: Color(0xFF823B18),
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: Color(0xFF823B18),
+                                    ),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () => context.openPrivacyPolicy(),
+                                  ),
                                 ],
                               ),
                             ),
@@ -171,6 +193,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _login() async {
+    if (!_agreed) {
+      setState(() => _error = 'Please agree to the User Agreement and Privacy Policy');
+      return;
+    }
     if (_email.text.trim().isEmpty || _pass.text.trim().isEmpty) return;
     setState(() { _loading = true; _error = null; });
     final err = await ref.read(loginAction)(_email.text.trim(), _pass.text.trim());

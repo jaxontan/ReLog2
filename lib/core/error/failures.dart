@@ -28,3 +28,8 @@ class MessageFailure extends Failure {
   final String message;
   const MessageFailure([this.message = 'Message operation failed']);
 }
+
+class NotificationFailure extends Failure {
+  final String message;
+  const NotificationFailure([this.message = 'Notification failed']);
+}

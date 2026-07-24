@@ -10,6 +10,8 @@ class Album {
   final int membersCount;
   final DateTime createdAt;
   final DateTime? endedAt;
+  final String? coverImagePath; // R2 storage path
+  final String? coverImageUrl;  // Public URL (computed)
 
   const Album({
     required this.id,
@@ -21,9 +23,12 @@ class Album {
     this.membersCount = 1,
     required this.createdAt,
     this.endedAt,
+    this.coverImagePath,
+    this.coverImageUrl,
   });
 
   bool get isActive => status == 'active';
+  bool get hasCoverImage => coverImagePath != null && coverImagePath!.isNotEmpty;
 
   Map<String, dynamic> toMap() => {
         'title': title,
@@ -34,6 +39,7 @@ class Album {
         'membersCount': membersCount,
         'createdAt': createdAt.toIso8601String(),
         if (endedAt != null) 'endedAt': endedAt!.toIso8601String(),
+        if (coverImagePath != null) 'cover_image_path': coverImagePath,
       };
 
   factory Album.fromMap(String id, Map<String, dynamic> map) => Album(
@@ -46,6 +52,8 @@ class Album {
         membersCount: map['membersCount'] ?? 1,
         createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
         endedAt: map['endedAt'] != null ? DateTime.tryParse(map['endedAt']) : null,
+        coverImagePath: map['cover_image_path'] as String?,
+        // coverImageUrl is computed at runtime via R2 public URL
       );
 
   // ponytail: 6-char alphanumeric from stdlib Random. Replace with uuid if collisions happen.

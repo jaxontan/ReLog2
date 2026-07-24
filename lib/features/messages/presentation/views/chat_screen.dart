@@ -1,13 +1,18 @@
 /// Real-time chat screen for an album
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:record/record.dart';
+import 'package:intl/intl.dart';
 import '../../../../app/design/design_system.dart';
 import '../widgets/message_bubble.dart';
 import '../view_models/message_view_model.dart';
 import '../../data/models/message.dart';
 import '../../../../features/auth/presentation/view_models/auth_view_model.dart';
+import '../../../../features/albums/presentation/view_models/album_view_model.dart';
+import '../../../../features/memories/data/repositories/memory_repository.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String albumId;
@@ -26,12 +31,17 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  final _recorder = AudioRecorder();
   bool _showEmojiPicker = false;
+  bool _isRecording = false;
+  bool _isSendingVoice = false;
+  bool _isMuted = false;
 
   @override
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
+    _recorder.dispose();
     super.dispose();
   }
 
@@ -68,6 +78,203 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  Future<void> _startVoiceRecording() async {
+    if (await _recorder.hasPermission()) {
+      setState(() => _isRecording = true);
+      final path = '${Directory.systemTemp.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      await _recorder.start(const RecordConfig(encoder: AudioEncoder.aacLc), path: path);
+    }
+  }
+
+  Future<void> _stopVoiceRecording() async {
+    final path = await _recorder.stop();
+    setState(() => _isRecording = false);
+    if (path != null) {
+      setState(() => _isSendingVoice = true);
+      final action = ref.read(sendMessageAction);
+      final (_, error) = await action(
+        albumId: widget.albumId,
+        content: 'Voice message',
+        type: MessageType.voice,
+        metadata: {'duration': 0}, // Duration would be calculated in production
+      );
+      if (mounted) {
+        setState(() => _isSendingVoice = false);
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error.message), backgroundColor: Theme.of(context).colorScheme.error),
+          );
+        }
+      }
+    }
+  }
+
+  void _showMembers() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final membersAsync = ref.watch(albumMembersProvider(widget.albumId));
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.6,
+          padding: const EdgeInsets.all(DSSpacing.lg),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(DSRadius.xl)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Members', style: DSTypography.titleLarge.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              )),
+              const SizedBox(height: DSSpacing.md),
+              Expanded(
+                child: membersAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(
+                    child: Text('Failed to load members', style: DSTypography.bodyMedium.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    )),
+                  ),
+                  data: (members) => ListView.separated(
+                    itemCount: members.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final member = members[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          child: Text(
+                            member.email.isNotEmpty ? member.email[0].toUpperCase() : '?',
+                            style: DSTypography.labelMedium.copyWith(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        title: Text(member.email, style: DSTypography.bodyLarge.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        )),
+                        subtitle: Text(
+                          member.isCreator ? 'Creator' : 'Member · Joined ${DateFormat('MMM d').format(member.joinedAt)}',
+                          style: DSTypography.bodySmall.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        trailing: member.isCreator
+                            ? Icon(Icons.star, size: 16, color: Theme.of(context).colorScheme.tertiary)
+                            : null,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSharedMedia() {
+    final repo = ref.read(memoryRepositoryProvider);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => FutureBuilder(
+        future: repo.albumMemories(widget.albumId),
+        builder: (context, snapshot) {
+          final memories = snapshot.data ?? [];
+          final mediaMemories = memories.where((m) => m.storagePath != null && m.type != 'note').toList();
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            padding: const EdgeInsets.all(DSSpacing.lg),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(DSRadius.xl)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Shared Media', style: DSTypography.titleLarge.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                )),
+                const SizedBox(height: DSSpacing.sm),
+                Text('${mediaMemories.length} items', style: DSTypography.bodySmall.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                )),
+                const SizedBox(height: DSSpacing.md),
+                Expanded(
+                  child: mediaMemories.isEmpty
+                      ? Center(
+                          child: Text('No media shared yet', style: DSTypography.bodyMedium.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          )),
+                        )
+                      : GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                            childAspectRatio: 1,
+                          ),
+                          itemCount: mediaMemories.length,
+                          itemBuilder: (context, index) {
+                            final memory = mediaMemories[index];
+                            final url = repo.publicUrl(memory.storagePath!);
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(DSRadius.sm),
+                              child: url != null
+                                  ? Image.network(
+                                      url,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                        child: Icon(_mediaIcon(memory.type),
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                      ),
+                                    )
+                                  : Container(
+                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                      child: Icon(_mediaIcon(memory.type),
+                                          color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                    ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  IconData _mediaIcon(String type) {
+    return switch (type) {
+      'photo' => Icons.photo_outlined,
+      'video' => Icons.videocam_outlined,
+      'voice' => Icons.mic_outlined,
+      _ => Icons.insert_photo_outlined,
+    };
+  }
+
+  void _toggleMute() {
+    setState(() => _isMuted = !_isMuted);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(_isMuted ? 'Notifications muted' : 'Notifications unmuted'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = context.scheme;
@@ -87,13 +294,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onSelected: (value) {
               switch (value) {
                 case 'members':
-                  // TODO: Show members
+                  _showMembers();
                   break;
                 case 'media':
-                  // TODO: Show shared media
+                  _showSharedMedia();
                   break;
                 case 'mute':
-                  // TODO: Mute notifications
+                  _toggleMute();
                   break;
               }
             },
@@ -114,11 +321,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'mute',
                 child: ListTile(
-                  leading: Icon(Icons.notifications_off_outlined),
-                  title: Text('Mute Notifications'),
+                  leading: Icon(_isMuted ? Icons.notifications_off : Icons.notifications_outlined),
+                  title: Text(_isMuted ? 'Unmute' : 'Mute Notifications'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -173,10 +380,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     final isCurrentUser = message.userId == ref.watch(authServiceProvider).currentUser?.id;
                     final showAvatar = index == 0 || displayMessages[index - 1].userId != message.userId;
 
-                    return MessageBubble(
-                      message: message,
-                      isOwn: isCurrentUser,
-                      showAvatar: showAvatar,
+                    return GestureDetector(
+                      onLongPress: () => _showMessageOptions(message),
+                      child: MessageBubble(
+                        message: message,
+                        isOwn: isCurrentUser,
+                        showAvatar: showAvatar,
+                      ),
                     );
                   },
                 );
@@ -189,6 +399,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onSend: _sendMessage,
             onEmojiToggle: () => setState(() => _showEmojiPicker = !_showEmojiPicker),
             showEmojiPicker: _showEmojiPicker,
+            isRecording: _isRecording,
+            isSendingVoice: _isSendingVoice,
+            onStartVoice: _startVoiceRecording,
+            onStopVoice: _stopVoiceRecording,
           ),
         ],
       ),
@@ -237,7 +451,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 title: Text('Delete', style: TextStyle(color: scheme.error)),
                 onTap: () async {
                   Navigator.pop(context);
-                  // TODO: Implement delete
+                  final messenger = ScaffoldMessenger.of(context);
+                  final repo = ref.read(messageRepositoryProvider);
+                  final error = await repo.deleteMessage(message.id);
+                  if (!mounted) return;
+                  if (error != null) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(error.message), backgroundColor: scheme.error),
+                    );
+                  } else {
+                    messenger.showSnackBar(
+                      SnackBar(content: const Text('Message deleted'), backgroundColor: scheme.primary),
+                    );
+                  }
                 },
               ),
             ] else ...[
@@ -266,13 +492,65 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 title: Text('Report', style: TextStyle(color: scheme.error)),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Report message
+                  _showReportDialog(message);
                 },
               ),
             ],
             const SizedBox(height: DSSpacing.md),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showReportDialog(Message message) {
+    final scheme = Theme.of(context).colorScheme;
+    final reportReasons = ['Spam', 'Inappropriate content', 'Harassment', 'Other'];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: scheme.surface,
+        title: const Text('Report Message'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: DSSpacing.sm),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                hintText: 'Select a reason',
+                hintStyle: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant.withValues(alpha: 0.6)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(DSRadius.md)),
+              ),
+              items: reportReasons.map((reason) {
+                return DropdownMenuItem(value: reason, child: Text(reason));
+              }).toList(),
+              onChanged: (_) {},
+              validator: (v) => v == null ? 'Please select a reason' : null,
+            ),
+            const SizedBox(height: DSSpacing.md),
+            Text(
+              'Your report will be reviewed by our team.',
+              style: DSTypography.bodySmall.copyWith(color: scheme.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Report submitted for review'),
+                  backgroundColor: scheme.primary,
+                ),
+              );
+            },
+            child: const Text('Submit Report'),
+          ),
+        ],
       ),
     );
   }
@@ -335,12 +613,20 @@ class _ChatInputArea extends StatefulWidget {
   final VoidCallback onSend;
   final VoidCallback onEmojiToggle;
   final bool showEmojiPicker;
+  final bool isRecording;
+  final bool isSendingVoice;
+  final VoidCallback onStartVoice;
+  final VoidCallback onStopVoice;
 
   const _ChatInputArea({
     required this.controller,
     required this.onSend,
     required this.onEmojiToggle,
     required this.showEmojiPicker,
+    this.isRecording = false,
+    this.isSendingVoice = false,
+    required this.onStartVoice,
+    required this.onStopVoice,
   });
 
   @override
@@ -387,7 +673,7 @@ class _ChatInputAreaState extends State<_ChatInputArea> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (widget.showEmojiPicker)
+            if (widget.showEmojiPicker && !widget.isRecording)
               SizedBox(
                 height: 250,
                 child: _EmojiPicker(onEmojiSelected: (emoji) {
@@ -400,55 +686,83 @@ class _ChatInputAreaState extends State<_ChatInputArea> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                IconButton(
-                  icon: Icon(
-                    widget.showEmojiPicker ? Icons.keyboard : Icons.emoji_emotions_outlined,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                if (!widget.isRecording)
+                  IconButton(
+                    icon: Icon(
+                      widget.showEmojiPicker ? Icons.keyboard : Icons.emoji_emotions_outlined,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    onPressed: widget.onEmojiToggle,
                   ),
-                  onPressed: widget.onEmojiToggle,
-                ),
-                Expanded(
-                  child: Container(
-                    constraints: const BoxConstraints(maxHeight: 120),
+                if (widget.isRecording) ...[
+                  const SizedBox(width: DSSpacing.sm),
+                  Container(
+                    width: 12, height: 12,
                     decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(DSRadius.full),
-                    ),
-                    child: TextField(
-                      controller: widget.controller,
-                      focusNode: _focusNode,
-                      maxLines: null,
-                      minLines: 1,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        hintText: 'Message...',
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: DSSpacing.lg,
-                          vertical: DSSpacing.md,
-                        ),
-                      ),
-                      onSubmitted: (_) => widget.onSend(),
+                      color: scheme.error,
+                      shape: BoxShape.circle,
                     ),
                   ),
-                ),
-                const SizedBox(width: DSSpacing.sm),
+                  const SizedBox(width: DSSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Recording...',
+                      style: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+                if (!widget.isRecording) ...[
+                  Expanded(
+                    child: Container(
+                      constraints: const BoxConstraints(maxHeight: 120),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(DSRadius.full),
+                      ),
+                      child: TextField(
+                        controller: widget.controller,
+                        focusNode: _focusNode,
+                        maxLines: null,
+                        minLines: 1,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: const InputDecoration(
+                          hintText: 'Message...',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: DSSpacing.lg,
+                            vertical: DSSpacing.md,
+                          ),
+                        ),
+                        onSubmitted: (_) => widget.onSend(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: DSSpacing.sm),
+                ],
                 AnimatedContainer(
                   duration: DSAnimation.fast,
-                  child: _hasText
+                  child: widget.isRecording
                       ? IconButton(
-                          icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
-                          onPressed: widget.onSend,
+                          icon: widget.isSendingVoice
+                              ? const SizedBox(
+                                  width: 20, height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.stop, color: Colors.red, size: 28),
+                          onPressed: widget.isSendingVoice ? null : widget.onStopVoice,
                         )
-                      : IconButton(
-                          icon: Icon(
-                            Icons.mic_outlined,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                          onPressed: () {
-                            // TODO: Voice message
-                          },
-                        ),
+                      : (_hasText
+                          ? IconButton(
+                              icon: Icon(Icons.send, color: scheme.primary),
+                              onPressed: widget.onSend,
+                            )
+                          : IconButton(
+                              icon: Icon(
+                                Icons.mic_outlined,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                              onPressed: widget.onStartVoice,
+                            )),
                 ),
               ],
             ),

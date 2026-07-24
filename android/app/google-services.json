@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "754599012373",
+    "project_id": "relog2-614b7",
+    "storage_bucket": "relog2-614b7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:754599012373:android:5f5ab11b50de7c4332461c",
+        "android_client_info": {
+          "package_name": "com.relog2.relog2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeavwaT4JL5kvJECXjijHra1PEacuDbvE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

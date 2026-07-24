@@ -10,6 +10,7 @@ import '../../features/albums/presentation/views/album_detail_screen.dart';
 import '../../features/albums/presentation/views/create_album_screen.dart';
 import '../../features/albums/presentation/views/join_album_screen.dart';
 import '../../features/memories/presentation/views/capture_screen.dart';
+import '../../features/memories/presentation/views/memory_detail_screen.dart';
 import '../../features/map/presentation/views/map_screen.dart';
 import '../../features/notes/presentation/views/note_editor_screen.dart';
 import '../../features/messages/presentation/views/chat_screen.dart';
@@ -41,6 +42,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/albums/:id/capture', builder: (_, state) => CaptureScreen(albumId: state.pathParameters['id']!)),
       GoRoute(path: '/albums/:id/map', builder: (_, state) => MapScreen(albumId: state.pathParameters['id']!)),
       GoRoute(path: '/albums/:id/notes/:phase', builder: (_, state) => NoteEditorScreen(albumId: state.pathParameters['id']!, phase: state.pathParameters['phase']!)),
+      GoRoute(path: '/memories/:id', builder: (_, state) => MemoryDetailScreen(memoryId: state.pathParameters['id']!)),
       GoRoute(
         path: '/albums/:id/chat',
         builder: (_, state) => ChatScreen(

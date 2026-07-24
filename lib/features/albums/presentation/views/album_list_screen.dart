@@ -5,6 +5,7 @@ import '../../../../../app/design/design_system.dart';
 import '../view_models/album_view_model.dart';
 import '../../../auth/presentation/view_models/auth_view_model.dart';
 import '../../data/models/album.dart';
+import '../../../../core/storage/r2_storage.dart';
 
 class AlbumListScreen extends ConsumerWidget {
   const AlbumListScreen({super.key});
@@ -129,14 +130,23 @@ class _AlbumCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cover image placeholder
+          // Cover image
           Container(
             height: 160,
             width: double.infinity,
             color: scheme.surfaceContainerHighest,
-            child: Center(
-              child: Icon(Icons.explore_outlined, size: 40, color: scheme.onSurfaceVariant.withValues(alpha: 0.3)),
-            ),
+            child: album.hasCoverImage
+                ? ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(DSRadius.lg)),
+                    child: Image.network(
+                      _getCoverUrl(album),
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _placeholder(scheme),
+                    ),
+                  )
+                : _placeholder(scheme),
           ),
           // Content
           Padding(
@@ -172,6 +182,19 @@ class _AlbumCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  String _getCoverUrl(Album album) {
+    if (album.coverImagePath != null && album.coverImagePath!.isNotEmpty) {
+      return R2Storage().publicUrl(album.coverImagePath!);
+    }
+    return '';
+  }
+
+  Widget _placeholder(ColorScheme scheme) {
+    return Center(
+      child: Icon(Icons.explore_outlined, size: 40, color: scheme.onSurfaceVariant.withValues(alpha: 0.3)),
     );
   }
 }

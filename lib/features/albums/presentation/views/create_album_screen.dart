@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../../app/design/design_system.dart';
 import '../view_models/album_view_model.dart';
 import '../../../auth/presentation/view_models/auth_view_model.dart';
@@ -16,11 +18,25 @@ class CreateAlbumScreen extends ConsumerStatefulWidget {
 class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
   final _titleCtrl = TextEditingController();
   bool _creating = false;
+  File? _coverImage;
+  final _picker = ImagePicker();
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickCoverImage() async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 85,
+    );
+    if (picked != null && mounted) {
+      setState(() => _coverImage = File(picked.path));
+    }
   }
 
   @override
@@ -35,7 +51,7 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(DSSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -60,6 +76,45 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
               'Give your journal a name and share the invite code with your companions.',
               style: DSTypography.bodyMedium.copyWith(color: scheme.onSurfaceVariant),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DSSpacing.xxl),
+            // Cover Image Picker
+            GestureDetector(
+              onTap: _pickCoverImage,
+              child: Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(DSRadius.lg),
+                  border: Border.all(color: scheme.outlineVariant, width: 2, style: BorderStyle.solid),
+                ),
+                child: _coverImage != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(DSRadius.lg),
+                        child: Image.file(
+                          _coverImage!,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_photo_alternate_outlined, size: 48, color: scheme.onSurfaceVariant),
+                          const SizedBox(height: DSSpacing.md),
+                          Text(
+                            'Add Cover Image (Optional)',
+                            style: DSTypography.titleSmall.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: DSSpacing.xs),
+                          Text(
+                            'Tap to select from gallery',
+                            style: DSTypography.bodySmall.copyWith(color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                          ),
+                        ],
+                      ),
+              ),
             ),
             const SizedBox(height: DSSpacing.xxl),
             // Form
@@ -101,7 +156,7 @@ class _CreateAlbumScreenState extends ConsumerState<CreateAlbumScreen> {
     final repo = ref.read(albumRepositoryProvider);
     final userId = ref.read(authServiceProvider).currentUser?.id;
     if (userId == null) return;
-    final (albumId, error) = await repo.createAlbum(title, userId);
+    final (albumId, error) = await repo.createAlbum(title, userId, coverImage: _coverImage);
     if (mounted) {
       if (error != null) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -10,6 +10,7 @@ class Memory {
   final double? lng;
   final DateTime capturedAt;
   final bool isConfessionLocked;
+  final Map<String, dynamic>? metadata;
 
   const Memory({
     required this.id,
@@ -23,6 +24,7 @@ class Memory {
     this.lng,
     required this.capturedAt,
     this.isConfessionLocked = false,
+    this.metadata,
   });
 
   bool get isNote => type == 'note';
@@ -39,6 +41,7 @@ class Memory {
         if (lng != null) 'lng': lng,
         'capturedAt': capturedAt.toIso8601String(),
         'isConfessionLocked': isConfessionLocked,
+        if (metadata != null) 'metadata': metadata,
       };
 
   factory Memory.fromMap(String id, Map<String, dynamic> map) => Memory(
@@ -53,5 +56,6 @@ class Memory {
         lng: (map['lng'] as num?)?.toDouble(),
         capturedAt: DateTime.tryParse(map['capturedAt'] ?? '') ?? DateTime.now(),
         isConfessionLocked: map['isConfessionLocked'] ?? false,
+        metadata: map['metadata'] != null ? Map<String, dynamic>.from(map['metadata']) : null,
       );
 }

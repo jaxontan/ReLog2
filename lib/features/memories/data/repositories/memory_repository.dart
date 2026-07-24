@@ -62,6 +62,25 @@ class MemoryRepository {
     return data.map((r) => _mapMemory(r)).where((m) => m.hasLocation).toList();
   }
 
+  Future<(Memory?, Failure?)> getMemory(String memoryId) async {
+    try {
+      final data = await _client.from('memories').select().eq('id', memoryId).maybeSingle();
+      if (data == null) return (null, const StorageFailure('Memory not found'));
+      return (_mapMemory(data), null);
+    } catch (e) {
+      return (null, StorageFailure(e.toString()));
+    }
+  }
+
+  Future<Failure?> deleteMemory(String memoryId) async {
+    try {
+      await _client.from('memories').delete().eq('id', memoryId);
+      return null;
+    } catch (e) {
+      return StorageFailure(e.toString());
+    }
+  }
+
   String? publicUrl(String storagePath) {
     try { return _r2.publicUrl(storagePath); }
     catch (_) { return null; }

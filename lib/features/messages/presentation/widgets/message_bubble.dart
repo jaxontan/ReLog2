@@ -1,4 +1,6 @@
 /// Chat message bubble widget
+library messages.widgets.message_bubble;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../app/design/design_system.dart';
@@ -97,7 +99,7 @@ class MessageBubble extends ConsumerWidget {
                     horizontal: DSSpacing.md,
                     vertical: DSSpacing.sm,
                   ),
-                  child: _buildMessageContent(context),
+                  child: _buildMessageContent(context, isOwn),
                 ),
                 if (showTime)
                   Padding(
@@ -109,7 +111,7 @@ class MessageBubble extends ConsumerWidget {
                     child: Text(
                       message.displayTime,
                       style: DSTypography.labelSmall.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                         fontSize: 10,
                       ),
                     ),
@@ -134,98 +136,98 @@ class MessageBubble extends ConsumerWidget {
             ),
           ],
         ],
-      );
-    }
+      ),
+    );
+  }
 
-    Widget _buildMessageContent(BuildContext context) {
-      final scheme = Theme.of(context).colorScheme;
+  Widget _buildMessageContent(BuildContext context, bool isOwn) {
+    final scheme = Theme.of(context).colorScheme;
 
-      switch (message.type) {
-        case MessageType.image:
-          if (message.metadata['url'] != null) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(DSRadius.md),
-                  child: Image.network(
-                    message.metadata['url'] as String,
-                    width: 200,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 150,
-                      color: scheme.surfaceContainerHighest,
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
-                    ),
+    switch (message.type) {
+      case MessageType.image:
+        if (message.metadata['url'] != null) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(DSRadius.md),
+                child: Image.network(
+                  message.metadata['url'] as String,
+                  width: 200,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 150,
+                    color: scheme.surfaceContainerHighest,
+                    child: const Icon(Icons.broken_image, color: Colors.grey),
                   ),
                 ),
-                if (message.content.isNotEmpty) ...[
-                  const SizedBox(height: DSSpacing.xs),
-                  Text(
-                    message.content,
-                    style: DSTypography.bodyMedium.copyWith(
-                      color: isOwn ? scheme.onPrimary : scheme.onSurface,
-                    ),
+              ),
+              if (message.content.isNotEmpty) ...[
+                const SizedBox(height: DSSpacing.xs),
+                Text(
+                  message.content,
+                  style: DSTypography.bodyMedium.copyWith(
+                    color: isOwn ? scheme.onPrimary : scheme.onSurface,
                   ),
-                ],
+                ),
               ],
-            );
-          }
-          return const SizedBox.shrink();
-
-        case MessageType.voice:
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.mic,
-                color: isOwn ? scheme.onPrimary : scheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: DSSpacing.sm),
-              Text(
-                message.metadata['duration'] != null
-                    ? '${(message.metadata['duration'] as num).toInt()}s'
-                    : 'Voice message',
-                style: DSTypography.bodyMedium.copyWith(
-                  color: isOwn ? scheme.onPrimary : scheme.onSurface,
-                ),
-              ),
             ],
           );
+        }
+        return const SizedBox.shrink();
 
-        case MessageType.location:
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.location_on,
-                color: isOwn ? scheme.onPrimary : scheme.secondary,
-                size: 20,
-              ),
-              const SizedBox(width: DSSpacing.sm),
-              Text(
-                'Location shared',
-                style: DSTypography.bodyMedium.copyWith(
-                  color: isOwn ? scheme.onPrimary : scheme.onSurface,
-                ),
-              ),
-            ],
-          );
-
-        case MessageType.system:
-          return _SystemMessageBubble(message: message);
-
-        case MessageType.text:
-        default:
-          return Text(
-            message.content,
-            style: DSTypography.bodyMedium.copyWith(
-              color: isOwn ? scheme.onPrimary : scheme.onSurface,
-              height: 1.4,
+      case MessageType.voice:
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.mic,
+              color: isOwn ? scheme.onPrimary : scheme.primary,
+              size: 20,
             ),
-          );
-      }
+            const SizedBox(width: DSSpacing.sm),
+            Text(
+              message.metadata['duration'] != null
+                  ? '${(message.metadata['duration'] as num).toInt()}s'
+                  : 'Voice message',
+              style: DSTypography.bodyMedium.copyWith(
+                color: isOwn ? scheme.onPrimary : scheme.onSurface,
+              ),
+            ),
+          ],
+        );
+
+      case MessageType.location:
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.location_on,
+              color: isOwn ? scheme.onPrimary : scheme.secondary,
+              size: 20,
+            ),
+            const SizedBox(width: DSSpacing.sm),
+            Text(
+              'Location shared',
+              style: DSTypography.bodyMedium.copyWith(
+                color: isOwn ? scheme.onPrimary : scheme.onSurface,
+              ),
+            ),
+          ],
+        );
+
+      case MessageType.system:
+        return _SystemMessageBubble(message: message);
+
+      case MessageType.text:
+      default:
+        return Text(
+          message.content,
+          style: DSTypography.bodyMedium.copyWith(
+            color: isOwn ? scheme.onPrimary : scheme.onSurface,
+            height: 1.4,
+          ),
+        );
     }
   }
 }
@@ -247,7 +249,7 @@ class _SystemMessageBubble extends StatelessWidget {
           vertical: DSSpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withOpacity(0.5),
+          color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(DSRadius.full),
         ),
         child: Row(
@@ -268,22 +270,22 @@ class _SystemMessageBubble extends StatelessWidget {
             ),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    IconData _getSystemIcon(String? event) {
-      switch (event) {
-        case 'member_joined':
-          return Icons.person_add;
-        case 'member_left':
-          return Icons.logout;
-        case 'trip_ended':
-          return Icons.flag;
-        case 'confession_unlocked':
-          return Icons.lock_open;
-        default:
-          return Icons.info_outline;
-      }
+  IconData _getSystemIcon(String? event) {
+    switch (event) {
+      case 'member_joined':
+        return Icons.person_add;
+      case 'member_left':
+        return Icons.logout;
+      case 'trip_ended':
+        return Icons.flag;
+      case 'confession_unlocked':
+        return Icons.lock_open;
+      default:
+        return Icons.info_outline;
     }
   }
 }

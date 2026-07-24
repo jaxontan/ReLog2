@@ -1,12 +1,27 @@
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/storage/r2_storage.dart';
 import '../models/album.dart';
 
 class AlbumRepository {
   final SupabaseClient _client = Supabase.instance.client;
+  final R2Storage _r2 = R2Storage();
 
-  Future<(String?, Failure?)> createAlbum(String title, String userId) async {
+  Future<(String?, Failure?)> createAlbum(
+    String title,
+    String userId, {
+    File? coverImage,
+  }) async {
     try {
+      String? coverPath;
+      if (coverImage != null) {
+        final ext = coverImage.path.split('.').last.toLowerCase();
+        final path = 'albums/covers/${DateTime.now().millisecondsSinceEpoch}.$ext';
+        await _r2.upload(path, coverImage);
+        coverPath = path;
+      }
+
       final code = Album.generateInviteCode();
       final res = await _client.from('albums').insert({
         'title': title,
@@ -15,12 +30,15 @@ class AlbumRepository {
         'status': 'active',
         'photo_count': 0,
         'members_count': 1,
+        if (coverPath != null) 'cover_image_path': coverPath,
       }).select().single();
+
       await _client.from('members').insert({
         'album_id': res['id'],
         'user_id': userId,
         'role': 'creator',
       });
+
       return (res['id'] as String, null);
     } catch (e) {
       return (null, AlbumFailure(e.toString()));
@@ -77,6 +95,19 @@ class AlbumRepository {
     }
   }
 
+  Future<String?> updateCoverImage(String albumId, File coverImage) async {
+    try {
+      final ext = coverImage.path.split('.').last.toLowerCase();
+      final path = 'albums/covers/${albumId}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+      await _r2.upload(path, coverImage);
+
+      await _client.from('albums').update({'cover_image_path': path}).eq('id', albumId);
+      return _r2.publicUrl(path);
+    } catch (e) {
+      return null;
+    }
+  }
+
   // ponytail: SQL snake_case columns → Dart camelCase model.
   Album _mapAlbum(Map<String, dynamic> row) => Album(
         id: row['id'] as String,
@@ -88,5 +119,7 @@ class AlbumRepository {
         membersCount: row['members_count'] as int? ?? 1,
         createdAt: DateTime.tryParse(row['created_at'] as String? ?? '') ?? DateTime.now(),
         endedAt: row['ended_at'] != null ? DateTime.tryParse(row['ended_at'] as String) : null,
+        coverImagePath: row['cover_image_path'] as String?,
+        // coverImageUrl computed at runtime via R2 publicUrl
       );
 }

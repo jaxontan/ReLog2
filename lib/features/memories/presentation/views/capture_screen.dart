@@ -23,7 +23,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> with WidgetsBindi
   List<CameraDescription> _cameras = [];
   bool _camReady = false, _recording = false, _saving = false;
   final _recorder = AudioRecorder();
-  String? _voicePath;
 
   @override
   void initState() {
@@ -100,9 +99,9 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> with WidgetsBindi
             padding: const EdgeInsets.symmetric(horizontal: DSSpacing.lg, vertical: DSSpacing.sm),
             child: Row(
               children: [
-                _CaptureTabBtn(index: 0, icon: Icons.camera_alt_outlined, label: 'Photo', selected: _tab == 0),
-                _CaptureTabBtn(index: 1, icon: Icons.videocam_outlined, label: 'Video', selected: _tab == 1),
-                _CaptureTabBtn(index: 2, icon: Icons.mic_outlined, label: 'Voice', selected: _tab == 2),
+                _captureTabBtn(index: 0, icon: Icons.camera_alt_outlined, label: 'Photo', selected: _tab == 0),
+                _captureTabBtn(index: 1, icon: Icons.videocam_outlined, label: 'Video', selected: _tab == 1),
+                _captureTabBtn(index: 2, icon: Icons.mic_outlined, label: 'Voice', selected: _tab == 2),
               ],
             ),
           ),
@@ -114,7 +113,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> with WidgetsBindi
     );
   }
 
-  Widget _CaptureTabBtn({required int index, required IconData icon, required String label, required bool selected}) {
+  Widget _captureTabBtn({required int index, required IconData icon, required String label, required bool selected}) {
     return Expanded(
       child: InkWell(
         onTap: () => setState(() => _tab = index),
@@ -246,7 +245,6 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> with WidgetsBindi
       setState(() => _recording = true);
       final path = '${Directory.systemTemp.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
       await _recorder.start(const RecordConfig(encoder: AudioEncoder.aacLc), path: path);
-      _voicePath = path;
     }
   }
 
